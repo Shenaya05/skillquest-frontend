@@ -1,0 +1,2881 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>EIM PC Ops – Interactive</title>
+    <style>
+        /* ─── IMPORTS & RESET ─── */
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@400;600;700;800&display=swap');
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        :root {
+            --gold: #f5a623;
+            --gold-dark: #d97d0a;
+            --gold-glow: rgba(245, 166, 35, 0.35);
+            --bg-dark: #080b12;
+            --bg-card: rgba(18, 24, 32, 0.75);
+            --bg-panel: rgba(26, 35, 48, 0.6);
+            --text-light: #e8edf5;
+            --text-muted: #8a9bb0;
+            --text-dim: #6a7b90;
+            --border-subtle: rgba(255, 255, 255, 0.06);
+            --radius-lg: 48px;
+            --radius-md: 24px;
+            --radius-sm: 16px;
+            --shadow-card: 0 20px 80px rgba(0, 0, 0, 0.8);
+            --transition-smooth: cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-light);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 12px;
+            user-select: none;
+            overflow-x: hidden;
+            background-image: radial-gradient(ellipse at 20% 50%, rgba(245, 166, 35, 0.06) 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 80%, rgba(74, 222, 128, 0.04) 0%, transparent 50%);
+        }
+        #app {
+            width: 100%;
+            max-width: 520px;
+            background: var(--bg-card);
+            backdrop-filter: blur(28px);
+            -webkit-backdrop-filter: blur(28px);
+            border-radius: var(--radius-lg);
+            padding: 20px 16px 24px;
+            box-shadow: var(--shadow-card), 0 0 80px rgba(245, 166, 35, 0.04);
+            position: relative;
+            min-height: 780px;
+            overflow: hidden;
+            border: 1px solid var(--border-subtle);
+            transition: box-shadow 0.6s ease;
+        }
+        #app::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle at 30% 40%, rgba(245, 166, 35, 0.04), transparent 40%),
+                radial-gradient(circle at 70% 60%, rgba(74, 222, 128, 0.03), transparent 50%);
+            z-index: -1;
+            animation: bgPulse 18s ease-in-out infinite alternate;
+        }
+        #app::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: var(--radius-lg);
+            padding: 1px;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.06), transparent 40%, transparent 60%, rgba(255, 255, 255, 0.03));
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            pointer-events: none;
+            z-index: 1;
+        }
+        @keyframes bgPulse {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(8%, 4%) scale(1.15); }
+        }
+        .screen {
+            display: none;
+            flex-direction: column;
+            animation: fadeSlideIn 0.45s var(--transition-smooth);
+            position: relative;
+            z-index: 2;
+        }
+        .screen.active { display: flex; }
+        @keyframes fadeSlideIn {
+            0% { opacity: 0; transform: translateY(24px) scale(0.96); }
+            100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        @keyframes fadeScale {
+            0% { opacity: 0; transform: scale(0.92); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 12px; box-shadow: 0 0 16px var(--gold-glow); }
+
+        /* ─── TYPOGRAPHY ─── */
+        .title-main {
+            font-family: 'Orbitron', monospace;
+            font-size: 24px;
+            font-weight: 900;
+            letter-spacing: 2px;
+            background: linear-gradient(135deg, #f5a623, #f7c948, #f5a623, #f7c948);
+            background-size: 300% 300%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: shimmerText 5s ease-in-out infinite;
+            text-align: center;
+            margin-bottom: 2px;
+            filter: drop-shadow(0 0 30px rgba(245, 166, 35, 0.15));
+        }
+        @keyframes shimmerText {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+        .title-sub {
+            font-size: 10px;
+            color: rgba(138, 155, 176, 0.6);
+            text-align: center;
+            letter-spacing: 5px;
+            text-transform: uppercase;
+            margin-bottom: 18px;
+            font-weight: 700;
+            border-bottom: 1px solid var(--border-subtle);
+            padding-bottom: 14px;
+        }
+        .heading {
+            font-family: 'Orbitron', monospace;
+            font-size: 18px;
+            font-weight: 700;
+            color: #f0f4fa;
+            letter-spacing: 1px;
+            text-shadow: 0 0 30px rgba(245, 166, 35, 0.08);
+        }
+        .subheading {
+            font-size: 13px;
+            color: var(--text-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 6px;
+        }
+        .label-sm {
+            font-size: 10px;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            font-weight: 700;
+        }
+        .text-glow { text-shadow: 0 0 30px rgba(245, 166, 35, 0.3); }
+
+        /* ─── BUTTONS ─── */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 14px 24px;
+            border: none;
+            border-radius: 60px;
+            font-size: 14px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.25s var(--transition-smooth);
+            background: rgba(42, 52, 64, 0.6);
+            color: var(--text-light);
+            width: 100%;
+            touch-action: manipulation;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            border: 1px solid var(--border-subtle);
+            backdrop-filter: blur(4px);
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+        }
+        .btn .ripple {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.25);
+            transform: scale(0);
+            animation: rippleAnim 0.6s ease-out forwards;
+            pointer-events: none;
+        }
+        @keyframes rippleAnim { to { transform: scale(4); opacity: 0; } }
+        .btn::after {
+            content: '';
+            position: absolute;
+            inset: -2px;
+            border-radius: 60px;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), transparent);
+            z-index: 0;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .btn:hover::after { opacity: 1; }
+        .btn>* { position: relative; z-index: 1; }
+        .btn:active { transform: scale(0.94); }
+        .btn-primary {
+            background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+            color: #0b0e14;
+            box-shadow: 0 4px 28px var(--gold-glow);
+            border: none;
+        }
+        .btn-primary:hover {
+            box-shadow: 0 6px 40px var(--gold-glow);
+            transform: translateY(-1px);
+        }
+        .btn-primary:active {
+            box-shadow: 0 2px 20px var(--gold-glow);
+            transform: scale(0.95);
+        }
+        .btn-secondary {
+            background: rgba(31, 42, 56, 0.8);
+            color: #c8d4e0;
+            border: 1px solid var(--border-subtle);
+        }
+        .btn-secondary:hover {
+            background: rgba(42, 56, 72, 0.9);
+            border-color: rgba(255, 255, 255, 0.12);
+        }
+        .btn:disabled {
+            opacity: 0.4;
+            pointer-events: none;
+            transform: scale(0.98);
+            box-shadow: none !important;
+            cursor: not-allowed;
+        }
+
+        /* ─── MENU GRID ─── */
+        .menu-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin: 6px 0 18px;
+        }
+        .menu-item {
+            background: var(--bg-panel);
+            backdrop-filter: blur(8px);
+            border-radius: var(--radius-md);
+            padding: 16px 18px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            cursor: pointer;
+            transition: all 0.35s var(--transition-smooth);
+            border: 1px solid var(--border-subtle);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            position: relative;
+            overflow: hidden;
+            transform-origin: center;
+        }
+        .menu-item::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(245, 166, 35, 0.08), transparent);
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+        .menu-item:hover {
+            transform: translateY(-2px) scale(1.01);
+            border-color: rgba(245, 166, 35, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 0 40px rgba(245, 166, 35, 0.04);
+        }
+        .menu-item:hover::before { opacity: 1; }
+        .menu-item:active {
+            transform: scale(0.96);
+            border-color: var(--gold);
+        }
+        .menu-item .icon {
+            font-size: 28px;
+            width: 52px;
+            height: 52px;
+            border-radius: var(--radius-sm);
+            background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            box-shadow: 0 4px 20px var(--gold-glow);
+            color: #0b0e14;
+            transition: transform 0.3s var(--transition-smooth), box-shadow 0.3s ease;
+        }
+        .menu-item:hover .icon {
+            transform: scale(1.05) rotate(-2deg);
+            box-shadow: 0 6px 30px var(--gold-glow);
+        }
+        .menu-item .info { flex: 1; }
+        .menu-item .info .name {
+            font-size: 16px;
+            font-weight: 800;
+            color: #f0f4fa;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .menu-item .info .desc {
+            font-size: 12px;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+        .menu-item .arrow {
+            color: #4a5a70;
+            font-size: 22px;
+            font-weight: 300;
+            transition: transform 0.3s var(--transition-smooth);
+        }
+        .menu-item:hover .arrow {
+            transform: translateX(4px);
+            color: var(--gold);
+        }
+        .menu-item.locked {
+            opacity: 0.45;
+            pointer-events: none;
+            filter: grayscale(0.7);
+        }
+        .menu-item.locked .badge {
+            background: #4a5a70;
+            color: #aab8c8;
+        }
+        .menu-item .badge {
+            background: var(--gold);
+            color: #0b0e14;
+            font-size: 9px;
+            font-weight: 900;
+            padding: 2px 12px;
+            border-radius: 60px;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            transition: all 0.3s ease;
+        }
+        .menu-item.shake {
+            animation: shake 0.45s ease-in-out;
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20% { transform: translateX(-10px); }
+            40% { transform: translateX(10px); }
+            60% { transform: translateX(-6px); }
+            80% { transform: translateX(6px); }
+        }
+
+        /* ─── PROGRESS BAR ─── */
+        .progress-wrap {
+            background: var(--bg-panel);
+            backdrop-filter: blur(8px);
+            border-radius: 60px;
+            padding: 14px 18px;
+            margin-top: 4px;
+            border: 1px solid var(--border-subtle);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+        .progress-wrap::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(90deg, transparent, rgba(245, 166, 35, 0.03), transparent);
+            animation: shimmerProgress 4s ease-in-out infinite;
+            pointer-events: none;
+        }
+        @keyframes shimmerProgress {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+        .progress-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            font-weight: 700;
+            position: relative;
+            z-index: 1;
+        }
+        .progress-row .label {
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .progress-row .value {
+            color: var(--gold);
+            text-shadow: 0 0 20px rgba(245, 166, 35, 0.15);
+        }
+        .progress-track {
+            width: 100%;
+            height: 6px;
+            background: rgba(35, 47, 64, 0.6);
+            border-radius: 12px;
+            margin-top: 8px;
+            overflow: hidden;
+            box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.3);
+            position: relative;
+            z-index: 1;
+        }
+        .progress-track .fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--gold), #f7c948, var(--gold));
+            background-size: 200% 100%;
+            border-radius: 12px;
+            transition: width 0.8s var(--transition-smooth);
+            box-shadow: 0 0 24px var(--gold-glow);
+            animation: fillShimmer 3s ease-in-out infinite;
+        }
+        @keyframes fillShimmer {
+            0%, 100% { background-position: 0% 0%; }
+            50% { background-position: 100% 0%; }
+        }
+
+        /* ─── LEVEL GRID ─── */
+        .level-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 12px;
+            margin: 12px 0 16px;
+        }
+        .level-card {
+            background: var(--bg-panel);
+            backdrop-filter: blur(8px);
+            border-radius: 20px;
+            padding: 12px 6px 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.35s var(--transition-smooth);
+            border: 2px solid var(--border-subtle);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+            transform-origin: center;
+            position: relative;
+            overflow: hidden;
+            min-width: 0;
+        }
+        .level-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(245, 166, 35, 0.06), transparent);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .level-card:hover:not(.locked) {
+            transform: translateY(-3px) scale(1.03);
+            border-color: rgba(245, 166, 35, 0.25);
+            box-shadow: 0 8px 28px rgba(0, 0, 0, 0.3), 0 0 30px rgba(245, 166, 35, 0.04);
+        }
+        .level-card:hover:not(.locked)::before { opacity: 1; }
+        .level-card:active:not(.locked) { transform: scale(0.92); }
+        .level-card .num {
+            font-family: 'Orbitron', monospace;
+            font-size: 22px;
+            font-weight: 900;
+            color: #f0f4fa;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.04);
+            transition: color 0.3s ease;
+        }
+        .level-card:hover:not(.locked) .num { color: var(--gold); }
+        .level-card .name {
+            font-size: 8px;
+            color: var(--text-muted);
+            margin-top: 2px;
+            line-height: 1.2;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            overflow-wrap: break-word;
+            word-break: break-word;
+            hyphens: auto;
+        }
+        .level-card .stars {
+            font-size: 12px;
+            color: var(--text-dim);
+            margin-top: 4px;
+            transition: color 0.3s ease;
+        }
+        .level-card.completed .stars {
+            color: var(--gold);
+            text-shadow: 0 0 16px var(--gold-glow);
+        }
+        .level-card.locked {
+            opacity: 0.3;
+            pointer-events: none;
+            filter: grayscale(1);
+        }
+        .level-card.active {
+            border-color: var(--gold);
+            background: rgba(245, 166, 35, 0.08);
+            box-shadow: 0 0 40px rgba(245, 166, 35, 0.12), 0 4px 20px rgba(0, 0, 0, 0.2);
+            transform: scale(1.05);
+        }
+        .level-card.active .num {
+            color: var(--gold);
+            text-shadow: 0 0 20px var(--gold-glow);
+        }
+        .level-card.completed {
+            border-color: #4ade80;
+            background: rgba(74, 222, 128, 0.04);
+            box-shadow: 0 0 20px rgba(74, 222, 128, 0.06);
+        }
+        .level-card.completed .num { color: #4ade80; }
+
+        /* ─── INSTRUCTIONS BOX ─── */
+        .instructions-box {
+            background: var(--bg-panel);
+            backdrop-filter: blur(8px);
+            border-radius: var(--radius-md);
+            padding: 20px 22px;
+            margin: 8px 0 16px;
+            border: 1px solid var(--border-subtle);
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+        .instructions-box::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--gold), transparent);
+            opacity: 0.6;
+        }
+        .instructions-box .obj {
+            font-weight: 800;
+            font-size: 16px;
+            color: #f0f4fa;
+            margin-bottom: 4px;
+        }
+        .instructions-box .detail {
+            font-size: 13px;
+            color: #b0c0d0;
+            line-height: 1.5;
+            font-weight: 500;
+        }
+        .instructions-box .rule {
+            font-size: 13px;
+            color: var(--text-muted);
+            padding-left: 20px;
+            margin: 5px 0;
+            position: relative;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+        .instructions-box .rule::before {
+            content: "⚡";
+            position: absolute;
+            left: -2px;
+            color: var(--gold);
+            font-size: 11px;
+            top: 1px;
+            transition: transform 0.3s ease;
+        }
+        .instructions-box .rule:hover::before {
+            transform: scale(1.3) rotate(20deg);
+        }
+
+        /* ─── GLOSSARY MODAL ─── */
+        .glossary-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(8px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            padding: 20px;
+        }
+        .glossary-overlay.active { display: flex; }
+        .glossary-modal {
+            background: var(--bg-card);
+            border-radius: var(--radius-md);
+            padding: 24px 20px;
+            max-width: 400px;
+            width: 100%;
+            max-height: 80vh;
+            overflow-y: auto;
+            border: 1px solid var(--border-subtle);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+        }
+        .glossary-modal h2 {
+            font-family: 'Orbitron', monospace;
+            font-size: 20px;
+            color: var(--gold);
+            margin-bottom: 12px;
+            text-align: center;
+        }
+        .glossary-modal .glossary-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            border-bottom: 1px solid var(--border-subtle);
+            font-size: 14px;
+        }
+        .glossary-modal .glossary-item .acronym {
+            font-weight: 800;
+            color: var(--gold);
+            min-width: 60px;
+        }
+        .glossary-modal .glossary-item .meaning {
+            color: var(--text-light);
+            text-align: right;
+        }
+        .glossary-modal .close-btn {
+            margin-top: 16px;
+            background: var(--bg-panel);
+            border: none;
+            color: var(--text-light);
+            padding: 10px;
+            border-radius: 60px;
+            font-weight: 700;
+            cursor: pointer;
+            width: 100%;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .glossary-modal .close-btn:active { transform: scale(0.95); }
+
+        /* ─── GAME HEADER ─── */
+        .game-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            background: var(--bg-panel);
+            padding: 10px 18px;
+            border-radius: 60px;
+            backdrop-filter: blur(4px);
+            border: 1px solid var(--border-subtle);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+        }
+        .game-header .level-tag {
+            font-family: 'Orbitron', monospace;
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--gold);
+            text-shadow: 0 0 16px var(--gold-glow);
+        }
+        .game-header .timer {
+            font-family: 'Orbitron', monospace;
+            font-size: 14px;
+            color: var(--text-muted);
+            font-weight: 600;
+            transition: color 0.3s ease;
+            min-width: 44px;
+            text-align: center;
+        }
+        .game-header .timer.running {
+            color: #f0f4fa;
+            animation: timerPulse 1.2s ease-in-out infinite;
+        }
+        @keyframes timerPulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+        .game-header .stars-display {
+            color: var(--gold);
+            font-size: 16px;
+            text-shadow: 0 0 20px var(--gold-glow);
+            letter-spacing: 2px;
+        }
+        .game-header .glossary-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 20px;
+            cursor: pointer;
+            padding: 0 4px;
+            transition: color 0.3s ease;
+            touch-action: manipulation;
+        }
+        .game-header .glossary-btn:hover { color: var(--gold); }
+        .game-header .glossary-btn:active { transform: scale(0.9); }
+
+        /* ─── INTERACTIVE GAME ELEMENTS ─── */
+        .game-area {
+            background: var(--bg-panel);
+            backdrop-filter: blur(8px);
+            border-radius: var(--radius-md);
+            padding: 16px 14px;
+            border: 1px solid var(--border-subtle);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            margin: 6px 0 12px;
+            min-height: 200px;
+        }
+        .game-area .task-title {
+            font-weight: 700;
+            font-size: 15px;
+            color: #f0f4fa;
+            margin-bottom: 10px;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .task-icon { font-size: 20px; }
+        .question-progress {
+            text-align: center;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+        .question-progress span { color: var(--gold); }
+
+        /* Drag & Drop */
+        .drop-zones {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            margin: 8px 0;
+        }
+        .drop-zone {
+            background: rgba(12, 18, 26, 0.6);
+            border: 2px dashed var(--border-subtle);
+            border-radius: var(--radius-sm);
+            padding: 12px 10px;
+            min-width: 80px;
+            min-height: 60px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            transition: all 0.3s ease;
+            flex: 1 0 80px;
+        }
+        .drop-zone.drag-over {
+            border-color: var(--gold);
+            background: rgba(245, 166, 35, 0.06);
+            box-shadow: 0 0 30px var(--gold-glow);
+        }
+        .drop-zone .zone-label {
+            font-size: 10px;
+            color: var(--text-dim);
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .drop-zone .zone-label .zone-icon { font-size: 14px; }
+        .drop-zone .zone-item {
+            background: rgba(35, 47, 64, 0.8);
+            padding: 4px 12px;
+            border-radius: 60px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #e8edf5;
+            border: 1px solid var(--border-subtle);
+            width: 100%;
+            text-align: center;
+        }
+        .drop-zone .zone-item.correct {
+            border-color: #4ade80;
+            background: rgba(74, 222, 128, 0.08);
+        }
+        .drop-zone .zone-item.wrong {
+            border-color: #f87171;
+            background: rgba(248, 113, 113, 0.08);
+            animation: shake 0.4s ease-in-out;
+        }
+
+        .drag-items {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
+            margin: 8px 0;
+            padding: 10px;
+            background: rgba(12, 18, 26, 0.4);
+            border-radius: var(--radius-sm);
+            min-height: 50px;
+        }
+        .drag-item {
+            padding: 8px 16px;
+            border-radius: 60px;
+            background: rgba(35, 47, 64, 0.8);
+            border: 2px solid var(--border-subtle);
+            font-weight: 700;
+            font-size: 13px;
+            color: #e8edf5;
+            cursor: grab;
+            touch-action: none;
+            transition: all 0.25s var(--transition-smooth);
+            user-select: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .drag-item .item-icon { font-size: 16px; }
+        .drag-item:active {
+            cursor: grabbing;
+            transform: scale(0.94);
+        }
+        .drag-item.dragging {
+            opacity: 0.4;
+            transform: scale(0.9);
+        }
+        .drag-item.placed {
+            opacity: 0.3;
+            pointer-events: none;
+        }
+
+        /* Sequence */
+        .sequence-items {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
+            margin: 8px 0;
+        }
+        .seq-item {
+            padding: 10px 16px;
+            border-radius: var(--radius-sm);
+            border: 2px solid var(--border-subtle);
+            background: rgba(26, 35, 48, 0.6);
+            color: #e8edf5;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.25s var(--transition-smooth);
+            touch-action: manipulation;
+            min-width: 60px;
+            text-align: center;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .seq-item .seq-icon { font-size: 16px; }
+        .seq-item:hover:not(.disabled) {
+            border-color: rgba(245, 166, 35, 0.3);
+            background: rgba(245, 166, 35, 0.06);
+            transform: scale(1.04);
+        }
+        .seq-item:active:not(.disabled) { transform: scale(0.94); }
+        .seq-item.selected {
+            border-color: var(--gold);
+            background: rgba(245, 166, 35, 0.12);
+            box-shadow: 0 0 20px var(--gold-glow);
+        }
+        .seq-item.correct {
+            border-color: #4ade80;
+            background: rgba(74, 222, 128, 0.08);
+        }
+        .seq-item.wrong {
+            border-color: #f87171;
+            background: rgba(248, 113, 113, 0.08);
+            animation: shake 0.4s ease-in-out;
+        }
+        .seq-item.disabled {
+            pointer-events: none;
+            opacity: 0.4;
+        }
+
+        /* Multiple Choice */
+        .choice-options {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin: 8px 0;
+        }
+        .choice-opt {
+            padding: 12px 16px;
+            border-radius: var(--radius-sm);
+            border: 2px solid var(--border-subtle);
+            background: rgba(26, 35, 48, 0.4);
+            color: #e8edf5;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.25s var(--transition-smooth);
+            touch-action: manipulation;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .choice-opt .choice-icon { font-size: 16px; }
+        .choice-opt:hover:not(.disabled) {
+            border-color: rgba(245, 166, 35, 0.3);
+            background: rgba(245, 166, 35, 0.06);
+            transform: translateX(4px);
+        }
+        .choice-opt:active:not(.disabled) { transform: scale(0.97); }
+        .choice-opt.selected-correct {
+            border-color: #4ade80;
+            background: rgba(74, 222, 128, 0.08);
+            box-shadow: 0 0 20px rgba(74, 222, 128, 0.08);
+        }
+        .choice-opt.selected-wrong {
+            border-color: #f87171;
+            background: rgba(248, 113, 113, 0.08);
+            animation: shake 0.4s ease-in-out;
+        }
+        .choice-opt.disabled {
+            cursor: default;
+            opacity: 0.6;
+        }
+
+        .game-feedback {
+            text-align: center;
+            padding: 8px 0 4px;
+            font-size: 14px;
+            font-weight: 600;
+            min-height: 28px;
+            color: var(--text-muted);
+        }
+        .game-feedback.success {
+            color: #4ade80;
+            text-shadow: 0 0 20px rgba(74, 222, 128, 0.2);
+        }
+        .game-feedback.error {
+            color: #f87171;
+            text-shadow: 0 0 20px rgba(248, 113, 113, 0.2);
+        }
+        .game-feedback.info {
+            color: var(--gold);
+            text-shadow: 0 0 20px var(--gold-glow);
+        }
+
+        .game-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 6px;
+        }
+        .game-actions .btn { flex: 1; }
+
+        /* ─── BACK ROW ─── */
+        .back-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 10px;
+        }
+        .back-btn {
+            background: var(--bg-panel);
+            backdrop-filter: blur(4px);
+            border: 1px solid var(--border-subtle);
+            color: #c8d4e0;
+            font-size: 26px;
+            padding: 4px 14px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: all 0.25s var(--transition-smooth);
+            touch-action: manipulation;
+            font-weight: 300;
+            line-height: 1;
+        }
+        .back-btn:hover {
+            background: rgba(42, 56, 72, 0.8);
+            border-color: rgba(245, 166, 35, 0.2);
+            color: var(--gold);
+            transform: translateX(-2px);
+        }
+        .back-btn:active { transform: scale(0.88); }
+
+        /* ─── FEEDBACK OVERLAY ─── */
+        .feedback-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(8, 11, 18, 0.94);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border-radius: var(--radius-lg);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 30px 24px;
+            z-index: 20;
+            animation: fadeScale 0.5s var(--transition-smooth);
+            border: 1px solid var(--border-subtle);
+        }
+        .feedback-overlay.show { display: flex; }
+        .feedback-overlay .big-icon {
+            font-size: 76px;
+            margin-bottom: 6px;
+            filter: drop-shadow(0 8px 40px rgba(0, 0, 0, 0.5));
+            animation: iconBounce 0.6s var(--transition-smooth);
+        }
+        @keyframes iconBounce {
+            0% { transform: scale(0); opacity: 0; }
+            60% { transform: scale(1.2); opacity: 1; }
+            100% { transform: scale(1); }
+        }
+        .feedback-overlay .fb-title {
+            font-family: 'Orbitron', monospace;
+            font-size: 28px;
+            font-weight: 900;
+            margin-bottom: 4px;
+            letter-spacing: 1px;
+        }
+        .feedback-overlay .fb-title.green {
+            color: #4ade80;
+            text-shadow: 0 0 50px rgba(74, 222, 128, 0.3);
+        }
+        .feedback-overlay .fb-title.gold {
+            color: var(--gold);
+            text-shadow: 0 0 50px var(--gold-glow);
+        }
+        .feedback-overlay .fb-title.red {
+            color: #f87171;
+            text-shadow: 0 0 50px rgba(248, 113, 113, 0.3);
+        }
+        .feedback-overlay .fb-sub {
+            font-size: 16px;
+            color: #b0c0d0;
+            text-align: center;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        .feedback-overlay .fb-score {
+            background: var(--bg-panel);
+            backdrop-filter: blur(4px);
+            border-radius: 20px;
+            padding: 16px 20px;
+            width: 100%;
+            max-width: 280px;
+            margin: 8px 0 18px;
+            border: 1px solid var(--border-subtle);
+            animation: fadeSlideIn 0.5s 0.2s both var(--transition-smooth);
+        }
+        .feedback-overlay .fb-score .row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            padding: 6px 0;
+            border-bottom: 1px solid var(--border-subtle);
+            font-weight: 600;
+        }
+        .feedback-overlay .fb-score .row:last-child {
+            border-bottom: none;
+            font-weight: 800;
+            color: var(--gold);
+        }
+        .feedback-overlay .fb-score .row .label { color: var(--text-muted); }
+
+        /* ─── RESPONSIVE ─── */
+        @media (max-width: 420px) {
+            #app { padding: 14px 10px 18px; border-radius: 32px; min-height: 600px; }
+            .title-main { font-size: 20px; }
+            .menu-item { padding: 12px 14px; gap: 12px; }
+            .menu-item .icon { width: 42px; height: 42px; font-size: 22px; }
+            .menu-item .info .name { font-size: 14px; }
+            .level-grid { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+            .level-card { padding: 10px 6px 8px; }
+            .level-card .num { font-size: 18px; }
+            .level-card .name { font-size: 9px; letter-spacing: 0.2px; }
+            .game-header { padding: 6px 12px; flex-wrap: wrap; gap: 4px; }
+            .game-header .level-tag { font-size: 10px; }
+            .game-header .timer { font-size: 12px; }
+            .feedback-overlay .fb-title { font-size: 22px; }
+            .feedback-overlay .big-icon { font-size: 56px; }
+            .drop-zone { min-width: 60px; min-height: 50px; padding: 8px; }
+            .drag-item, .seq-item, .choice-opt { font-size: 12px; padding: 6px 12px; }
+            .glossary-modal { padding: 16px; }
+            .glossary-modal h2 { font-size: 18px; }
+        }
+        @media (max-width: 380px) {
+            #app { padding: 10px 8px 14px; border-radius: 24px; }
+            .level-grid { gap: 6px; }
+            .level-card .num { font-size: 16px; }
+            .level-card .name { font-size: 8.5px; letter-spacing: 0; }
+            .menu-item .info .name { font-size: 12px; }
+            .menu-item .info .desc { font-size: 10px; }
+            .btn { font-size: 12px; padding: 10px 16px; }
+        }
+
+        /* Ghost element for drag */
+        #dragGhost {
+            position: fixed;
+            pointer-events: none;
+            z-index: 9999;
+            padding: 8px 16px;
+            border-radius: 60px;
+            background: var(--gold);
+            color: #0b0e14;
+            font-weight: 800;
+            font-size: 14px;
+            box-shadow: 0 8px 40px var(--gold-glow);
+            display: none;
+            transform: translate(-50%, -50%);
+            font-family: 'Inter', sans-serif;
+        }
+        /* Abbr styling */
+        abbr[title] {
+            text-decoration: underline dotted var(--gold);
+            cursor: help;
+            color: var(--gold);
+        }
+    </style>
+</head>
+<body>
+
+    <div id="app">
+        <div id="dragGhost"></div>
+
+        <!-- ─── GLOSSARY OVERLAY ─── -->
+        <div class="glossary-overlay" id="glossaryOverlay">
+            <div class="glossary-modal">
+                <h2>📖 Glossary</h2>
+                <div id="glossaryList"></div>
+                <button class="close-btn" id="glossaryCloseBtn">Close</button>
+            </div>
+        </div>
+
+        <!-- ─── MAIN MENU ─── -->
+        <div id="screen-main" class="screen active">
+            <div class="title-main">💻 PC OPS – Interactive</div>
+            <div class="title-sub">— 5 challenges per level · shuffled answers —</div>
+            <div class="menu-grid">
+                <div class="menu-item" data-game="ohs" id="menu-ohs" title="Occupational Health and Safety &amp; Ergonomics">
+                    <div class="icon">🛡️</div>
+                    <div class="info">
+                        <div class="name">OHS &amp; Ergonomics <span class="badge">Lv.1</span></div>
+                        <div class="desc">5 tasks · basic to difficult</div>
+                    </div>
+                    <div class="arrow">›</div>
+                </div>
+                <div class="menu-item" data-game="os" id="menu-os" title="Operating System &amp; File Management">
+                    <div class="icon">📁</div>
+                    <div class="info">
+                        <div class="name">OS &amp; File Management <span class="badge">Lv.1</span></div>
+                        <div class="desc">5 tasks · basic to difficult</div>
+                    </div>
+                    <div class="arrow">›</div>
+                </div>
+                <div class="menu-item" data-game="typing" id="menu-typing" title="Typing &amp; Keyboard Shortcuts">
+                    <div class="icon">⌨️</div>
+                    <div class="info">
+                        <div class="name">Typing &amp; Shortcuts <span class="badge">Lv.1</span></div>
+                        <div class="desc">5 tasks · basic to difficult</div>
+                    </div>
+                    <div class="arrow">›</div>
+                </div>
+                <div class="menu-item" data-game="spreadsheet" id="menu-spreadsheet" title="Spreadsheet Operations">
+                    <div class="icon">📊</div>
+                    <div class="info">
+                        <div class="name">Spreadsheet Ops <span class="badge">Lv.1</span></div>
+                        <div class="desc">5 tasks · basic to difficult</div>
+                    </div>
+                    <div class="arrow">›</div>
+                </div>
+                <div class="menu-item" data-game="maintenance" id="menu-maintenance" title="System Maintenance &amp; Troubleshooting">
+                    <div class="icon">🔧</div>
+                    <div class="info">
+                        <div class="name">System Maintenance <span class="badge">Lv.1</span></div>
+                        <div class="desc">5 tasks · basic to difficult</div>
+                    </div>
+                    <div class="arrow">›</div>
+                </div>
+            </div>
+            <div class="progress-wrap">
+                <div class="progress-row">
+                    <span class="label">🏆 Overall Progress</span>
+                    <span class="value" id="overallProgress">0%</span>
+                </div>
+                <div class="progress-track">
+                    <div class="fill" id="overallFill" style="width:0%;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ─── OHS ─── -->
+        <div id="screen-ohs" class="screen">
+            <div class="back-row">
+                <button class="back-btn" data-back="main">‹</button>
+                <span class="heading" style="font-size:17px;">🛡️ OHS &amp; Ergonomics</span>
+            </div>
+            <div id="ohs-select">
+                <div class="subheading">Select Level</div>
+                <div class="level-grid" id="ohsLevelGrid"></div>
+                <button class="btn btn-primary" id="ohsStartBtn">START LEVEL</button>
+            </div>
+            <div id="ohs-instructions" style="display:none;">
+                <div class="instructions-box">
+                    <div class="obj" id="ohsInstrObj">🎯 5 challenges</div>
+                    <div class="detail" id="ohsInstrDetail">Answer each challenge. Drag, sequence, or choose.</div>
+                    <div class="rule">Complete all 5 to finish the level</div>
+                    <div class="rule">Answers are shuffled each time</div>
+                </div>
+                <button class="btn btn-primary" id="ohsPlayBtn">▶ PLAY</button>
+            </div>
+            <div id="ohs-game" style="display:none;">
+                <div class="game-header">
+                    <span class="level-tag" id="ohsGameLevel">Level 1</span>
+                    <span class="stars-display" id="ohsGameStars">★★★★★</span>
+                    <span class="timer" id="ohsGameTimer">00:00</span>
+                    <button class="glossary-btn" data-glossary="ohs">📖</button>
+                </div>
+                <div class="game-area" id="ohsGameArea"></div>
+                <div class="game-actions">
+                    <button class="btn btn-secondary" id="ohsResetBtn">↻ Reset</button>
+                    <button class="btn btn-primary" id="ohsNextBtn" disabled>➜ NEXT</button>
+                </div>
+            </div>
+            <div class="feedback-overlay" id="ohsFeedbackOverlay">
+                <div class="big-icon" id="ohsFbIcon">🎉</div>
+                <div class="fb-title gold" id="ohsFbTitle">Level Complete!</div>
+                <div class="fb-sub" id="ohsFbSub">Great work!</div>
+                <div class="fb-score" id="ohsFbScore"><div class="row"><span class="label">TOTAL XP</span><span class="text-glow" style="color:#f5a623;">75 XP</span></div></div>
+                <div style="display:flex;gap:10px;width:100%;max-width:280px;">
+                    <button class="btn btn-secondary" id="ohsFbReplay">↻ REPLAY</button>
+                    <button class="btn btn-primary" id="ohsFbNext">➜ NEXT LEVEL</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ─── OS ─── -->
+        <div id="screen-os" class="screen">
+            <div class="back-row">
+                <button class="back-btn" data-back="main">‹</button>
+                <span class="heading" style="font-size:17px;">📁 OS &amp; File Management</span>
+            </div>
+            <div id="os-select">
+                <div class="subheading">Select Level</div>
+                <div class="level-grid" id="osLevelGrid"></div>
+                <button class="btn btn-primary" id="osStartBtn">START LEVEL</button>
+            </div>
+            <div id="os-instructions" style="display:none;">
+                <div class="instructions-box">
+                    <div class="obj" id="osInstrObj">📂 5 challenges</div>
+                    <div class="detail" id="osInstrDetail">Drag, sequence, or choose.</div>
+                    <div class="rule">Complete all 5</div>
+                </div>
+                <button class="btn btn-primary" id="osPlayBtn">▶ PLAY</button>
+            </div>
+            <div id="os-game" style="display:none;">
+                <div class="game-header">
+                    <span class="level-tag" id="osGameLevel">Level 1</span>
+                    <span class="stars-display" id="osGameStars">★★★★★</span>
+                    <span class="timer" id="osGameTimer">00:00</span>
+                    <button class="glossary-btn" data-glossary="os">📖</button>
+                </div>
+                <div class="game-area" id="osGameArea"></div>
+                <div class="game-actions">
+                    <button class="btn btn-secondary" id="osResetBtn">↻ Reset</button>
+                    <button class="btn btn-primary" id="osNextBtn" disabled>➜ NEXT</button>
+                </div>
+            </div>
+            <div class="feedback-overlay" id="osFeedbackOverlay">
+                <div class="big-icon" id="osFbIcon">🎉</div>
+                <div class="fb-title gold" id="osFbTitle">Level Complete!</div>
+                <div class="fb-sub" id="osFbSub">Great work!</div>
+                <div class="fb-score" id="osFbScore"><div class="row"><span class="label">TOTAL XP</span><span class="text-glow" style="color:#f5a623;">75 XP</span></div></div>
+                <div style="display:flex;gap:10px;width:100%;max-width:280px;">
+                    <button class="btn btn-secondary" id="osFbReplay">↻ REPLAY</button>
+                    <button class="btn btn-primary" id="osFbNext">➜ NEXT LEVEL</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ─── Typing ─── -->
+        <div id="screen-typing" class="screen">
+            <div class="back-row">
+                <button class="back-btn" data-back="main">‹</button>
+                <span class="heading" style="font-size:17px;">⌨️ Typing &amp; Shortcuts</span>
+            </div>
+            <div id="typing-select">
+                <div class="subheading">Select Level</div>
+                <div class="level-grid" id="typingLevelGrid"></div>
+                <button class="btn btn-primary" id="typingStartBtn">START LEVEL</button>
+            </div>
+            <div id="typing-instructions" style="display:none;">
+                <div class="instructions-box">
+                    <div class="obj" id="typingInstrObj">⌨️ 5 challenges</div>
+                    <div class="detail" id="typingInstrDetail">Match shortcuts, order steps.</div>
+                    <div class="rule">Complete all 5</div>
+                </div>
+                <button class="btn btn-primary" id="typingPlayBtn">▶ PLAY</button>
+            </div>
+            <div id="typing-game" style="display:none;">
+                <div class="game-header">
+                    <span class="level-tag" id="typingGameLevel">Level 1</span>
+                    <span class="stars-display" id="typingGameStars">★★★★★</span>
+                    <span class="timer" id="typingGameTimer">00:00</span>
+                    <button class="glossary-btn" data-glossary="typing">📖</button>
+                </div>
+                <div class="game-area" id="typingGameArea"></div>
+                <div class="game-actions">
+                    <button class="btn btn-secondary" id="typingResetBtn">↻ Reset</button>
+                    <button class="btn btn-primary" id="typingNextBtn" disabled>➜ NEXT</button>
+                </div>
+            </div>
+            <div class="feedback-overlay" id="typingFeedbackOverlay">
+                <div class="big-icon" id="typingFbIcon">🎉</div>
+                <div class="fb-title gold" id="typingFbTitle">Level Complete!</div>
+                <div class="fb-sub" id="typingFbSub">Great work!</div>
+                <div class="fb-score" id="typingFbScore"><div class="row"><span class="label">TOTAL XP</span><span class="text-glow" style="color:#f5a623;">75 XP</span></div></div>
+                <div style="display:flex;gap:10px;width:100%;max-width:280px;">
+                    <button class="btn btn-secondary" id="typingFbReplay">↻ REPLAY</button>
+                    <button class="btn btn-primary" id="typingFbNext">➜ NEXT LEVEL</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ─── Spreadsheet ─── -->
+        <div id="screen-spreadsheet" class="screen">
+            <div class="back-row">
+                <button class="back-btn" data-back="main">‹</button>
+                <span class="heading" style="font-size:17px;">📊 Spreadsheet Ops</span>
+            </div>
+            <div id="spreadsheet-select">
+                <div class="subheading">Select Level</div>
+                <div class="level-grid" id="spreadsheetLevelGrid"></div>
+                <button class="btn btn-primary" id="spreadsheetStartBtn">START LEVEL</button>
+            </div>
+            <div id="spreadsheet-instructions" style="display:none;">
+                <div class="instructions-box">
+                    <div class="obj" id="spreadsheetInstrObj">📊 5 challenges</div>
+                    <div class="detail" id="spreadsheetInstrDetail">Build formulas, order steps.</div>
+                    <div class="rule">Complete all 5</div>
+                </div>
+                <button class="btn btn-primary" id="spreadsheetPlayBtn">▶ PLAY</button>
+            </div>
+            <div id="spreadsheet-game" style="display:none;">
+                <div class="game-header">
+                    <span class="level-tag" id="spreadsheetGameLevel">Level 1</span>
+                    <span class="stars-display" id="spreadsheetGameStars">★★★★★</span>
+                    <span class="timer" id="spreadsheetGameTimer">00:00</span>
+                    <button class="glossary-btn" data-glossary="spreadsheet">📖</button>
+                </div>
+                <div class="game-area" id="spreadsheetGameArea"></div>
+                <div class="game-actions">
+                    <button class="btn btn-secondary" id="spreadsheetResetBtn">↻ Reset</button>
+                    <button class="btn btn-primary" id="spreadsheetNextBtn" disabled>➜ NEXT</button>
+                </div>
+            </div>
+            <div class="feedback-overlay" id="spreadsheetFeedbackOverlay">
+                <div class="big-icon" id="spreadsheetFbIcon">🎉</div>
+                <div class="fb-title gold" id="spreadsheetFbTitle">Level Complete!</div>
+                <div class="fb-sub" id="spreadsheetFbSub">Great work!</div>
+                <div class="fb-score" id="spreadsheetFbScore"><div class="row"><span class="label">TOTAL XP</span><span class="text-glow" style="color:#f5a623;">75 XP</span></div></div>
+                <div style="display:flex;gap:10px;width:100%;max-width:280px;">
+                    <button class="btn btn-secondary" id="spreadsheetFbReplay">↻ REPLAY</button>
+                    <button class="btn btn-primary" id="spreadsheetFbNext">➜ NEXT LEVEL</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ─── Maintenance ─── -->
+        <div id="screen-maintenance" class="screen">
+            <div class="back-row">
+                <button class="back-btn" data-back="main">‹</button>
+                <span class="heading" style="font-size:17px;">🔧 System Maintenance</span>
+            </div>
+            <div id="maintenance-select">
+                <div class="subheading">Select Level</div>
+                <div class="level-grid" id="maintenanceLevelGrid"></div>
+                <button class="btn btn-primary" id="maintenanceStartBtn">START LEVEL</button>
+            </div>
+            <div id="maintenance-instructions" style="display:none;">
+                <div class="instructions-box">
+                    <div class="obj" id="maintenanceInstrObj">🔧 5 challenges</div>
+                    <div class="detail" id="maintenanceInstrDetail">Order troubleshooting steps.</div>
+                    <div class="rule">Complete all 5</div>
+                </div>
+                <button class="btn btn-primary" id="maintenancePlayBtn">▶ PLAY</button>
+            </div>
+            <div id="maintenance-game" style="display:none;">
+                <div class="game-header">
+                    <span class="level-tag" id="maintenanceGameLevel">Level 1</span>
+                    <span class="stars-display" id="maintenanceGameStars">★★★★★</span>
+                    <span class="timer" id="maintenanceGameTimer">00:00</span>
+                    <button class="glossary-btn" data-glossary="maintenance">📖</button>
+                </div>
+                <div class="game-area" id="maintenanceGameArea"></div>
+                <div class="game-actions">
+                    <button class="btn btn-secondary" id="maintenanceResetBtn">↻ Reset</button>
+                    <button class="btn btn-primary" id="maintenanceNextBtn" disabled>➜ NEXT</button>
+                </div>
+            </div>
+            <div class="feedback-overlay" id="maintenanceFeedbackOverlay">
+                <div class="big-icon" id="maintenanceFbIcon">🎉</div>
+                <div class="fb-title gold" id="maintenanceFbTitle">Level Complete!</div>
+                <div class="fb-sub" id="maintenanceFbSub">Great work!</div>
+                <div class="fb-score" id="maintenanceFbScore"><div class="row"><span class="label">TOTAL XP</span><span class="text-glow" style="color:#f5a623;">75 XP</span></div></div>
+                <div style="display:flex;gap:10px;width:100%;max-width:280px;">
+                    <button class="btn btn-secondary" id="maintenanceFbReplay">↻ REPLAY</button>
+                    <button class="btn btn-primary" id="maintenanceFbNext">➜ NEXT LEVEL</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        // RIPPLE EFFECT
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        document.addEventListener('click', function(e) {
+            const btn = e.target.closest('.btn');
+            if (!btn) return;
+            const rect = btn.getBoundingClientRect();
+            const ripple = document.createElement('span');
+            ripple.className = 'ripple';
+            const size = Math.max(rect.width, rect.height);
+            ripple.style.width = ripple.style.height = size + 'px';
+            ripple.style.left = (e.clientX - rect.left - size / 2) + 'px';
+            ripple.style.top = (e.clientY - rect.top - size / 2) + 'px';
+            btn.appendChild(ripple);
+            ripple.addEventListener('animationend', () => ripple.remove());
+        });
+
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        // STATE
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        const state = {
+            ohs: { level: 0, completed: new Set() },
+            os: { level: 0, completed: new Set() },
+            typing: { level: 0, completed: new Set() },
+            spreadsheet: { level: 0, completed: new Set() },
+            maintenance: { level: 0, completed: new Set() },
+            timerInterval: null,
+            seconds: 0,
+        };
+
+        function shuffleArray(arr) {
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            return arr;
+        }
+
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        // GLOSSARY DATA
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        const GLOSSARY = {
+            'OHS': 'Occupational Health and Safety',
+            'ESD': 'Electrostatic Discharge',
+            'PPE': 'Personal Protective Equipment',
+            'OS': 'Operating System',
+            'CRM': 'Customer Relationship Management',
+            'QA': 'Quality Assurance',
+            'AHT': 'Average Handling Time',
+            'FCR': 'First Call Resolution',
+            'CSAT': 'Customer Satisfaction',
+            'ASA': 'Average Speed of Answer',
+        };
+
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        // HELPERS FOR ACRONYM TOOLTIPS
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        function wrapAcronyms(text) {
+            if (!text) return text;
+            // Replace known acronyms with <abbr> tag
+            let result = text;
+            for (const [acro, meaning] of Object.entries(GLOSSARY)) {
+                // Use word boundaries to avoid partial matches
+                const regex = new RegExp('\\b' + acro + '\\b', 'g');
+                result = result.replace(regex, `<abbr title="${meaning}">${acro}</abbr>`);
+            }
+            return result;
+        }
+
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        // LEVEL DATA – 5 levels per module, 5 questions each
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        const MODULE_LEVELS = {};
+
+        // --- OHS ---
+        MODULE_LEVELS.ohs = [
+            { name: 'Safety Basics', questions: [
+                    { type: 'dragdrop', title: 'Match safety gear to body part.',
+                        zones: ['Head', 'Hands', 'Feet'],
+                        items: ['Hard Hat', 'Gloves', 'Safety Shoes', 'Ear Plugs', 'Goggles'],
+                        correct: { 'Hard Hat': 'Head', 'Gloves': 'Hands', 'Safety Shoes': 'Feet', 'Ear Plugs': 'Head',
+                            'Goggles': 'Head' } },
+                    { type: 'choice', title: 'What is the first step in preventing ESD?', options: ['Wear gloves',
+                            'Use anti-static wrist strap', 'Turn off power', 'Remove jewelry'
+                        ], correct: 1 },
+                    { type: 'sequence', title: 'Tap steps for proper ergonomic setup.', steps: ['Adjust chair height',
+                            'Set monitor at eye level', 'Place keyboard flat'
+                        ] },
+                    { type: 'dragdrop', title: 'Match hazard to control.',
+                        zones: ['Overload', 'Cable damage', 'Residual charge'],
+                        items: ['Use surge protector', 'Inspect regularly', 'Discharge before touching'],
+                        correct: { 'Use surge protector': 'Overload', 'Inspect regularly': 'Cable damage',
+                            'Discharge before touching': 'Residual charge' } },
+                    { type: 'choice', title: 'What is the correct posture for wrists?', options: ['Bent upward',
+                            'Flat and neutral', 'Resting on edge', 'Crossed'
+                        ], correct: 1 }
+                ] },
+            { name: 'Ergonomics & Electrical', questions: [
+                    { type: 'dragdrop', title: 'Place items in correct ergonomic position.',
+                        zones: ['Monitor', 'Chair', 'Keyboard'],
+                        items: ['Eye level', 'Back support', 'Flat wrist'],
+                        correct: { 'Eye level': 'Monitor', 'Back support': 'Chair', 'Flat wrist': 'Keyboard' } },
+                    { type: 'choice', title: 'What should you do if a power cord is frayed?', options: ['Ignore it',
+                            'Wrap with tape', 'Replace immediately', 'Straighten it'
+                        ], correct: 2 },
+                    { type: 'sequence', title: 'Correct order for ESD safety.', steps: ['Put on wrist strap',
+                            'Connect to ground', 'Handle components'
+                        ] },
+                    { type: 'dragdrop', title: 'Match electrical hazard to solution.',
+                        zones: ['Overloading', 'Damaged cable', 'Static charge'],
+                        items: ['Use power strip with breaker', 'Inspect and replace', 'Use anti-static mat'],
+                        correct: { 'Use power strip with breaker': 'Overloading',
+                            'Inspect and replace': 'Damaged cable', 'Use anti-static mat': 'Static charge' } },
+                    { type: 'choice', title: 'What is the recommended break frequency for computer work?',
+                        options: ['Every 2 hours', 'Every 30 minutes', 'Every hour', 'Every 90 minutes'],
+                        correct: 1 }
+                ] },
+            { name: 'Safety Procedures', questions: [
+                    { type: 'sequence', title: 'Correct order for reporting a hazard.', steps: ['Identify hazard',
+                            'Notify supervisor', 'Document incident'
+                        ] },
+                    { type: 'dragdrop', title: 'Match PPE to use case.',
+                        zones: ['Soldering', 'Heavy lifting', 'Chemical handling'],
+                        items: ['Safety glasses', 'Back belt', 'Gloves'],
+                        correct: { 'Safety glasses': 'Soldering', 'Back belt': 'Heavy lifting',
+                            'Gloves': 'Chemical handling' } },
+                    { type: 'choice', title: 'What is the main purpose of a fire extinguisher in a lab?',
+                        options: ['Cool down equipment', 'Put out electrical fires', 'Clean surfaces',
+                            'Prevent static'
+                        ], correct: 1 },
+                    { type: 'dragdrop', title: 'Match safety sign to meaning.',
+                        zones: ['Warning', 'Mandatory', 'Prohibition'],
+                        items: ['Yellow triangle', 'Blue circle', 'Red circle with slash'],
+                        correct: { 'Yellow triangle': 'Warning', 'Blue circle': 'Mandatory',
+                            'Red circle with slash': 'Prohibition' } },
+                    { type: 'sequence', title: 'Steps for safe equipment shutdown.', steps: ['Save work',
+                            'Close applications', 'Shut down OS', 'Turn off power'
+                        ] }
+                ] },
+            { name: 'Advanced Safety', questions: [
+                    { type: 'choice', title: 'What does "lockout/tagout" refer to?', options: [
+                            'Securing cables', 'Disabling equipment during maintenance', 'Locking files',
+                            'Tagging inventory'
+                        ], correct: 1 },
+                    { type: 'dragdrop', title: 'Match emergency procedure to action.',
+                        zones: ['Fire', 'Earthquake', 'Chemical spill'],
+                        items: ['Evacuate', 'Drop, cover, hold', 'Ventilate area'],
+                        correct: { 'Evacuate': 'Fire', 'Drop, cover, hold': 'Earthquake',
+                            'Ventilate area': 'Chemical spill' } },
+                    { type: 'sequence', title: 'Correct order for first aid response.', steps: ['Assess situation',
+                            'Call for help', 'Provide care', 'Report incident'
+                        ] },
+                    { type: 'dragdrop', title: 'Match electrical hazard to class.',
+                        zones: ['Class A', 'Class B', 'Class C'],
+                        items: ['Combustible materials', 'Flammable liquids', 'Electrical equipment'],
+                        correct: { 'Combustible materials': 'Class A', 'Flammable liquids': 'Class B',
+                            'Electrical equipment': 'Class C' } },
+                    { type: 'choice', title: 'What is the safe distance from a live electrical panel?',
+                        options: ['1 meter', '3 meters', '5 meters', '10 meters'], correct: 2 }
+                ] },
+            { name: 'Comprehensive Safety', questions: [
+                    { type: 'sequence', title: 'Complete risk assessment steps.', steps: ['Identify hazards',
+                            'Evaluate risks', 'Implement controls', 'Review and update'
+                        ] },
+                    { type: 'dragdrop', title: 'Match health symptom to ergonomic issue.',
+                        zones: ['Eye strain', 'Carpal tunnel', 'Back pain'],
+                        items: ['Blurry vision', 'Numb fingers', 'Lower back ache'],
+                        correct: { 'Blurry vision': 'Eye strain', 'Numb fingers': 'Carpal tunnel',
+                            'Lower back ache': 'Back pain' } },
+                    { type: 'choice', title: 'What is the primary goal of OHS?', options: [
+                            'Increase productivity', 'Prevent injury and illness', 'Save costs',
+                            'Comply with regulations'
+                        ], correct: 1 },
+                    { type: 'dragdrop', title: 'Match control measure to hierarchy.',
+                        zones: ['Elimination', 'Substitution', 'Engineering'],
+                        items: ['Remove hazard', 'Replace with safer', 'Isolate with guard'],
+                        correct: { 'Remove hazard': 'Elimination', 'Replace with safer': 'Substitution',
+                            'Isolate with guard': 'Engineering' } },
+                    { type: 'sequence', title: 'Correct order for incident investigation.', steps: ['Secure scene',
+                            'Gather evidence', 'Interview witnesses', 'Analyze causes', 'Recommend actions'
+                        ] }
+                ] }
+        ];
+
+        // --- OS ---
+        MODULE_LEVELS.os = [
+            { name: 'File Basics', questions: [
+                    { type: 'dragdrop', title: 'Sort files by type.',
+                        zones: ['Document', 'Spreadsheet', 'Image'],
+                        items: ['report.docx', 'budget.xlsx', 'photo.png', 'notes.txt', 'data.csv'],
+                        correct: { 'report.docx': 'Document', 'budget.xlsx': 'Spreadsheet', 'photo.png': 'Image',
+                            'notes.txt': 'Document', 'data.csv': 'Spreadsheet' } },
+                    { type: 'choice', title: 'What does .xlsx indicate?', options: ['Word document',
+                            'Excel spreadsheet', 'PowerPoint presentation', 'PDF'
+                        ], correct: 1 },
+                    { type: 'sequence', title: 'Steps to create a new folder.', steps: ['Open File Explorer',
+                            'Navigate to location', 'Right-click → New → Folder', 'Name folder'
+                        ] },
+                    { type: 'dragdrop', title: 'Match attribute to description.',
+                        zones: ['Read-only', 'Hidden', 'Archive'],
+                        items: ['Cannot modify', 'Not visible', 'Backup flag'],
+                        correct: { 'Cannot modify': 'Read-only', 'Not visible': 'Hidden', 'Backup flag': 'Archive' } },
+                    { type: 'choice', title: 'Which shortcut opens File Explorer?', options: ['Windows+E',
+                            'Windows+F', 'Windows+R', 'Windows+D'
+                        ], correct: 0 }
+                ] },
+            { name: 'Folder Management', questions: [
+                    { type: 'dragdrop', title: 'Sort files into correct folder.',
+                        zones: ['Work', 'Personal', 'Archive'],
+                        items: ['project_plan.docx', 'family_photo.jpg', 'old_reports.zip', 'invoice.xlsx',
+                            'vacation_pic.png'
+                        ],
+                        correct: { 'project_plan.docx': 'Work', 'family_photo.jpg': 'Personal',
+                            'old_reports.zip': 'Archive', 'invoice.xlsx': 'Work', 'vacation_pic.png': 'Personal' } },
+                    { type: 'choice', title: 'What is a directory tree?', options: ['File type',
+                            'Folder hierarchy', 'Backup strategy', 'Network map'
+                        ], correct: 1 },
+                    { type: 'sequence', title: 'Steps to compress files.', steps: ['Select files',
+                            'Right-click → Send to → Compressed folder', 'Name archive'
+                        ] },
+                    { type: 'dragdrop', title: 'Match backup type to description.',
+                        zones: ['Full', 'Differential', 'Incremental'],
+                        items: ['All data', 'Changes since last full', 'Changes since last backup'],
+                        correct: { 'All data': 'Full', 'Changes since last full': 'Differential',
+                            'Changes since last backup': 'Incremental' } },
+                    { type: 'choice', title: 'Which tool is used for file compression?', options: ['Windows Explorer',
+                            'ZIP/RAR', 'Task Manager', 'Device Manager'
+                        ], correct: 1 }
+                ] },
+            { name: 'Advanced File Ops', questions: [
+                    { type: 'sequence', title: 'Steps to set file permissions.', steps: ['Right-click file',
+                            'Properties → Security', 'Edit permissions', 'Apply changes'
+                        ] },
+                    { type: 'dragdrop', title: 'Match extension to application.',
+                        zones: ['Word', 'Excel', 'PowerPoint'],
+                        items: ['.docx', '.xlsx', '.pptx'],
+                        correct: { '.docx': 'Word', '.xlsx': 'Excel', '.pptx': 'PowerPoint' } },
+                    { type: 'choice', title: 'What is a compressed folder?', options: ['A ZIP archive',
+                            'A system folder', 'A shortcut', 'A network drive'
+                        ], correct: 0 },
+                    { type: 'dragdrop', title: 'Match storage type to use.',
+                        zones: ['Primary', 'Backup', 'Archive'],
+                        items: ['SSD', 'External HDD', 'Tape drive'],
+                        correct: { 'SSD': 'Primary', 'External HDD': 'Backup', 'Tape drive': 'Archive' } },
+                    { type: 'choice', title: 'Which attribute prevents file deletion?', options: ['Read-only',
+                            'Hidden', 'System', 'Archive'
+                        ], correct: 0 }
+                ] },
+            { name: 'System Files', questions: [
+                    { type: 'sequence', title: 'Steps to show hidden files.', steps: ['Open File Explorer',
+                            'View tab', 'Check "Hidden items"'
+                        ] },
+                    { type: 'dragdrop', title: 'Match system file to purpose.',
+                        zones: ['Boot', 'Config', 'Log'],
+                        items: ['boot.ini', 'settings.cfg', 'error.log'],
+                        correct: { 'boot.ini': 'Boot', 'settings.cfg': 'Config', 'error.log': 'Log' } },
+                    { type: 'choice', title: 'What does "system restore" do?', options: ['Backs up files',
+                            'Reverts system settings', 'Deletes viruses', 'Updates drivers'
+                        ], correct: 1 },
+                    { type: 'dragdrop', title: 'Match backup schedule to frequency.',
+                        zones: ['Daily', 'Weekly', 'Monthly'],
+                        items: ['Incremental', 'Differential', 'Full'],
+                        correct: { 'Incremental': 'Daily', 'Differential': 'Weekly', 'Full': 'Monthly' } },
+                    { type: 'choice', title: 'Which tool manages disk partitions?', options: ['Disk Management',
+                            'Device Manager', 'Task Scheduler', 'Event Viewer'
+                        ], correct: 0 }
+                ] },
+            { name: 'Data Management Mastery', questions: [
+                    { type: 'sequence', title: 'Steps to organize a messy folder.', steps: ['Create categories',
+                            'Move files', 'Rename consistently', 'Delete duplicates'
+                        ] },
+                    { type: 'dragdrop', title: 'Match data type to storage.',
+                        zones: ['Documents', 'Media', 'Programs'],
+                        items: ['PDFs', 'Videos', 'Executables'],
+                        correct: { 'PDFs': 'Documents', 'Videos': 'Media', 'Executables': 'Programs' } },
+                    { type: 'choice', title: 'What is the best practice for data backup?', options: [
+                            'Store only in cloud', 'Use 3-2-1 strategy', 'Backup once a year', 'No backup needed'
+                        ], correct: 1 },
+                    { type: 'dragdrop', title: 'Match recovery plan to scenario.',
+                        zones: ['Hardware failure', 'Ransomware', 'Accidental deletion'],
+                        items: ['Restore from backup', 'Use antivirus', 'Recover from recycle bin'],
+                        correct: { 'Restore from backup': 'Hardware failure', 'Use antivirus': 'Ransomware',
+                            'Recover from recycle bin': 'Accidental deletion' } },
+                    { type: 'choice', title: 'Which command creates a new directory in CLI?', options: ['mkdir',
+                            'rmdir', 'cd', 'dir'
+                        ], correct: 0 }
+                ] }
+        ];
+
+        // --- Typing ---
+        MODULE_LEVELS.typing = [
+            { name: 'Home Row Basics', questions: [
+                    { type: 'dragdrop', title: 'Place fingers on correct home row keys.',
+                        zones: ['Left Hand', 'Right Hand'],
+                        items: ['ASDF', 'JKL;'],
+                        correct: { 'ASDF': 'Left Hand', 'JKL;': 'Right Hand' } },
+                    { type: 'choice', title: 'What is the correct home row for touch typing?', options: [
+                            'QWERTY', 'ASDF JKL;', 'ZXCV BNM,', 'ABCD EFGH'
+                        ], correct: 1 },
+                    { type: 'sequence', title: 'Steps to improve typing speed.', steps: ['Sit straight',
+                            'Place fingers on home row', 'Type without looking'
+                        ] },
+                    { type: 'dragdrop', title: 'Match shortcut to function.',
+                        zones: ['Copy', 'Paste', 'Undo'],
+                        items: ['Ctrl+C', 'Ctrl+V', 'Ctrl+Z'],
+                        correct: { 'Ctrl+C': 'Copy', 'Ctrl+V': 'Paste', 'Ctrl+Z': 'Undo' } },
+                    { type: 'choice', title: 'Which key is used for Caps Lock?', options: ['Shift', 'Caps Lock',
+                            'Ctrl', 'Alt'
+                        ], correct: 1 }
+                ] },
+            { name: 'System Shortcuts', questions: [
+                    { type: 'dragdrop', title: 'Match shortcut to action.',
+                        zones: ['Task Manager', 'Switch App', 'Show Desktop'],
+                        items: ['Ctrl+Shift+Esc', 'Alt+Tab', 'Windows+D'],
+                        correct: { 'Ctrl+Shift+Esc': 'Task Manager', 'Alt+Tab': 'Switch App',
+                            'Windows+D': 'Show Desktop' } },
+                    { type: 'choice', title: 'Which shortcut locks the PC?', options: ['Windows+L', 'Windows+M',
+                            'Windows+P', 'Windows+Q'
+                        ], correct: 0 },
+                    { type: 'sequence', title: 'Steps to open Task Manager without a mouse.', steps: [
+                            'Press Ctrl+Shift+Esc', 'Navigate with arrow keys', 'Press Enter to open'
+                        ] },
+                    { type: 'dragdrop', title: 'Match navigation shortcut to function.',
+                        zones: ['Open Explorer', 'Run dialog', 'Settings'],
+                        items: ['Windows+E', 'Windows+R', 'Windows+I'],
+                        correct: { 'Windows+E': 'Open Explorer', 'Windows+R': 'Run dialog',
+                            'Windows+I': 'Settings' } },
+                    { type: 'choice', title: 'What does Alt+F4 do?', options: ['Close current window',
+                            'Open file menu', 'Refresh screen', 'Switch user'
+                        ], correct: 0 }
+                ] },
+            { name: 'Text Editing Shortcuts', questions: [
+                    { type: 'dragdrop', title: 'Match editing shortcut to action.',
+                        zones: ['Select all', 'Find', 'Save'],
+                        items: ['Ctrl+A', 'Ctrl+F', 'Ctrl+S'],
+                        correct: { 'Ctrl+A': 'Select all', 'Ctrl+F': 'Find', 'Ctrl+S': 'Save' } },
+                    { type: 'choice', title: 'Which shortcut redoes the last undo?', options: ['Ctrl+Y', 'Ctrl+Z',
+                            'Ctrl+X', 'Ctrl+C'
+                        ], correct: 0 },
+                    { type: 'sequence', title: 'Steps to copy and paste using only keyboard.', steps: ['Select text',
+                            'Ctrl+C', 'Move cursor', 'Ctrl+V'
+                        ] },
+                    { type: 'dragdrop', title: 'Match formatting shortcut to result.',
+                        zones: ['Bold', 'Italic', 'Underline'],
+                        items: ['Ctrl+B', 'Ctrl+I', 'Ctrl+U'],
+                        correct: { 'Ctrl+B': 'Bold', 'Ctrl+I': 'Italic', 'Ctrl+U': 'Underline' } },
+                    { type: 'choice', title: 'What is the shortcut to open a new tab in a browser?', options: [
+                            'Ctrl+T', 'Ctrl+N', 'Ctrl+W', 'Ctrl+P'
+                        ], correct: 0 }
+                ] },
+            { name: 'Advanced Shortcuts', questions: [
+                    { type: 'sequence', title: 'Steps to take a screenshot on Windows.', steps: ['Press Windows+Shift+S',
+                            'Select area', 'Screenshot saved to clipboard'
+                        ] },
+                    { type: 'dragdrop', title: 'Match shortcut to system utility.',
+                        zones: ['Snipping Tool', 'Task Manager', 'File Explorer'],
+                        items: ['Windows+Shift+S', 'Ctrl+Shift+Esc', 'Windows+E'],
+                        correct: { 'Windows+Shift+S': 'Snipping Tool', 'Ctrl+Shift+Esc': 'Task Manager',
+                            'Windows+E': 'File Explorer' } },
+                    { type: 'choice', title: 'Which shortcut opens the Windows settings?', options: ['Windows+I',
+                            'Windows+S', 'Windows+P', 'Windows+A'
+                        ], correct: 0 },
+                    { type: 'dragdrop', title: 'Match shortcut to virtual desktop action.',
+                        zones: ['New desktop', 'Switch desktop', 'Close desktop'],
+                        items: ['Windows+Ctrl+D', 'Windows+Ctrl+Left/Right', 'Windows+Ctrl+F4'],
+                        correct: { 'Windows+Ctrl+D': 'New desktop', 'Windows+Ctrl+Left/Right': 'Switch desktop',
+                            'Windows+Ctrl+F4': 'Close desktop' } },
+                    { type: 'choice', title: 'What does Windows+Shift+S do?', options: ['Opens Snipping Tool',
+                            'Opens Settings', 'Opens Search', 'Opens Start menu'
+                        ], correct: 0 }
+                ] },
+            { name: 'Master Shortcuts', questions: [
+                    { type: 'sequence', title: 'Correct order to shut down using keyboard.', steps: ['Windows+X',
+                            'U', 'U'
+                        ] },
+                    { type: 'dragdrop', title: 'Match shortcut to accessibility feature.',
+                        zones: ['Magnifier', 'Narrator', 'High Contrast'],
+                        items: ['Windows+Plus', 'Windows+Ctrl+Enter', 'Windows+Alt+Print Screen'],
+                        correct: { 'Windows+Plus': 'Magnifier', 'Windows+Ctrl+Enter': 'Narrator',
+                            'Windows+Alt+Print Screen': 'High Contrast' } },
+                    { type: 'choice', title: 'Which shortcut opens the emoji panel?', options: ['Windows+Period',
+                            'Windows+Semicolon', 'Windows+E', 'Windows+R'
+                        ], correct: 0 },
+                    { type: 'dragdrop', title: 'Match shortcut to clipboard history.',
+                        zones: ['Open history', 'Paste selected'],
+                        items: ['Windows+V', 'Click to paste'],
+                        correct: { 'Windows+V': 'Open history', 'Click to paste': 'Paste selected' } },
+                    { type: 'choice', title: 'What is the shortcut for "Select All" in most apps?', options: [
+                            'Ctrl+A', 'Ctrl+S', 'Ctrl+Shift+A', 'Ctrl+E'
+                        ], correct: 0 }
+                ] }
+        ];
+
+        // --- Spreadsheet ---
+        MODULE_LEVELS.spreadsheet = [
+            { name: 'Formula Basics', questions: [
+                    { type: 'dragdrop', title: 'Build SUM formula.',
+                        zones: ['=SUM(', ')', 'A1:A10'],
+                        items: ['=SUM(', 'A1:A10', ')'],
+                        correct: { '=SUM(': '=SUM(', 'A1:A10': 'A1:A10', ')': ')' } },
+                    { type: 'choice', title: 'What does =AVERAGE(B2:B8) do?', options: ['Adds all',
+                            'Finds average', 'Counts cells', 'Finds max'
+                        ], correct: 1 },
+                    { type: 'sequence', title: 'Steps to apply currency format.', steps: ['Select cells',
+                            'Open Format menu', 'Choose Currency', 'Set decimals'
+                        ] },
+                    { type: 'dragdrop', title: 'Build IF formula.',
+                        zones: ['=IF(', '>10', ',"Yes","No")'],
+                        items: ['=IF(', 'A1>10', ',"Yes","No")'],
+                        correct: { '=IF(': '=IF(', 'A1>10': '>10', ',"Yes","No")': ',"Yes","No")' } },
+                    { type: 'choice', title: 'Which function locks cells?', options: ['=LOCK()', '=PROTECT()',
+                            'Format Cells → Protection', '=FREEZE()'
+                        ], correct: 2 }
+                ] },
+            { name: 'Advanced Formulas', questions: [
+                    { type: 'dragdrop', title: 'Build COUNT formula.',
+                        zones: ['=COUNT(', ')', 'A1:A10'],
+                        items: ['=COUNT(', 'A1:A10', ')'],
+                        correct: { '=COUNT(': '=COUNT(', 'A1:A10': 'A1:A10', ')': ')' } },
+                    { type: 'choice', title: 'What does =MAX(C2:C20) return?', options: ['Average', 'Largest value',
+                            'Smallest value', 'Sum'
+                        ], correct: 1 },
+                    { type: 'sequence', title: 'Steps to sort data.', steps: ['Select range',
+                            'Data → Sort', 'Choose column', 'Order'
+                        ] },
+                    { type: 'dragdrop', title: 'Build a formula to add two cells.',
+                        zones: ['=', '+', 'A1', 'B1'],
+                        items: ['=', 'A1', '+', 'B1'],
+                        correct: { '=': '=', 'A1': 'A1', '+': '+', 'B1': 'B1' } },
+                    { type: 'choice', title: 'Which function checks if a condition is true?', options: ['=IF()',
+                            '=AND()', '=OR()', '=NOT()'
+                        ], correct: 0 }
+                ] },
+            { name: 'Data Analysis', questions: [
+                    { type: 'sequence', title: 'Steps to create a chart.', steps: ['Select data',
+                            'Insert → Chart', 'Choose chart type', 'Format as needed'
+                        ] },
+                    { type: 'dragdrop', title: 'Match function to purpose.',
+                        zones: ['SUM', 'AVERAGE', 'COUNT'],
+                        items: ['=SUM', '=AVERAGE', '=COUNT'],
+                        correct: { '=SUM': 'SUM', '=AVERAGE': 'AVERAGE', '=COUNT': 'COUNT' } },
+                    { type: 'choice', title: 'What does =LEN(A1) return?', options: ['Number of characters',
+                            'Number of words', 'Number of spaces', 'Cell address'
+                        ], correct: 0 },
+                    { type: 'dragdrop', title: 'Build a formula to find average.',
+                        zones: ['=AVERAGE(', ')', 'B1:B10'],
+                        items: ['=AVERAGE(', 'B1:B10', ')'],
+                        correct: { '=AVERAGE(': '=AVERAGE(', 'B1:B10': 'B1:B10', ')': ')' } },
+                    { type: 'choice', title: 'Which tool removes duplicates?', options: ['Data → Remove Duplicates',
+                            'Home → Delete', 'Formulas → Remove', 'Review → Remove'
+                        ], correct: 0 }
+                ] },
+            { name: 'Protection & Validation', questions: [
+                    { type: 'sequence', title: 'Steps to password-protect a sheet.', steps: ['Review tab',
+                            'Protect Sheet', 'Enter password', 'Confirm'
+                        ] },
+                    { type: 'dragdrop', title: 'Match data validation to type.',
+                        zones: ['Whole number', 'Decimal', 'List'],
+                        items: ['Integer only', 'Number with decimals', 'Drop-down choices'],
+                        correct: { 'Integer only': 'Whole number', 'Number with decimals': 'Decimal',
+                            'Drop-down choices': 'List' } },
+                    { type: 'choice', title: 'What does cell locking prevent?', options: ['Editing',
+                            'Deleting the sheet', 'Adding rows', 'Formatting'
+                        ], correct: 0 },
+                    { type: 'dragdrop', title: 'Match protection to scope.',
+                        zones: ['Sheet', 'Workbook', 'Cell'],
+                        items: ['Protect Sheet', 'Protect Workbook', 'Lock Cell'],
+                        correct: { 'Protect Sheet': 'Sheet', 'Protect Workbook': 'Workbook',
+                            'Lock Cell': 'Cell' } },
+                    { type: 'choice', title: 'Which feature restricts cell input to a list?', options: [
+                            'Data Validation', 'Conditional Formatting', 'Protect Sheet', 'Sort'
+                        ], correct: 0 }
+                ] },
+            { name: 'Master Spreadsheet', questions: [
+                    { type: 'sequence', title: 'Steps to create a pivot table.', steps: ['Select data',
+                            'Insert → PivotTable', 'Choose fields', 'Arrange layout'
+                        ] },
+                    { type: 'dragdrop', title: 'Match function to description.',
+                        zones: ['SUMIF', 'VLOOKUP', 'CONCATENATE'],
+                        items: ['Sum with condition', 'Lookup value', 'Join text'],
+                        correct: { 'Sum with condition': 'SUMIF', 'Lookup value': 'VLOOKUP',
+                            'Join text': 'CONCATENATE' } },
+                    { type: 'choice', title: 'What does the $ sign in cell references do?', options: [
+                            'Absolute reference', 'Relative reference', 'Mixed reference', 'Formats as currency'
+                        ], correct: 0 },
+                    { type: 'dragdrop', title: 'Build a VLOOKUP formula.',
+                        zones: ['=VLOOKUP(', ',', 'A2', 'B:C', '2', 'FALSE)'],
+                        items: ['=VLOOKUP(', 'A2', ',', 'B:C', ',', '2', ',', 'FALSE)'],
+                        correct: { '=VLOOKUP(': '=VLOOKUP(', 'A2': 'A2', ',': ',', 'B:C': 'B:C', '2': '2',
+                            'FALSE)': 'FALSE)' } },
+                    { type: 'choice', title: 'Which function is used for conditional summing?', options: [
+                            '=SUMIF()', '=IF()', '=SUM()', '=COUNTIF()'
+                        ], correct: 0 }
+                ] }
+        ];
+
+        // --- Maintenance ---
+        MODULE_LEVELS.maintenance = [
+            { name: 'Basic Troubleshooting', questions: [
+                    { type: 'sequence', title: 'Correct order for malware removal.', steps: [
+                            'Update antivirus', 'Run full scan', 'Quarantine threats', 'Reboot'
+                        ] },
+                    { type: 'choice', title: 'What does a yellow exclamation mark in Device Manager indicate?',
+                        options: ['Missing driver', 'Disabled device', 'Conflict', 'Virus'], correct: 0 },
+                    { type: 'dragdrop', title: 'Match issue to solution.',
+                        zones: ['Blue screen', 'No internet', 'Slow PC'],
+                        items: ['Check memory', 'Reset router', 'Run disk cleanup'],
+                        correct: { 'Check memory': 'Blue screen', 'Reset router': 'No internet',
+                            'Run disk cleanup': 'Slow PC' } },
+                    { type: 'sequence', title: 'Steps to clean a PC.', steps: ['Power off',
+                            'Use compressed air', 'Wipe screen', 'Reconnect'
+                        ] },
+                    { type: 'choice', title: 'What is the first step in hardware troubleshooting?', options: [
+                            'Replace part', 'Check Device Manager', 'Reinstall OS', 'Call IT'
+                        ], correct: 1 }
+                ] },
+            { name: 'Driver & System Updates', questions: [
+                    { type: 'sequence', title: 'Steps to update a driver.', steps: ['Open Device Manager',
+                            'Right-click device', 'Update driver', 'Search automatically'
+                        ] },
+                    { type: 'dragdrop', title: 'Match driver to device.',
+                        zones: ['Graphics', 'Network', 'Audio'],
+                        items: ['Video card', 'Ethernet adapter', 'Sound card'],
+                        correct: { 'Video card': 'Graphics', 'Ethernet adapter': 'Network',
+                            'Sound card': 'Audio' } },
+                    { type: 'choice', title: 'Where are driver updates typically found?', options: [
+                            'Windows Update', 'Device Manager', 'Manufacturer website', 'All of the above'
+                        ], correct: 3 },
+                    { type: 'dragdrop', title: 'Match system tool to function.',
+                        zones: ['Disk Cleanup', 'Defragment', 'Check Disk'],
+                        items: ['Free up space', 'Optimize files', 'Repair disk errors'],
+                        correct: { 'Free up space': 'Disk Cleanup', 'Optimize files': 'Defragment',
+                            'Repair disk errors': 'Check Disk' } },
+                    { type: 'choice', title: 'What is the best practice before installing a new driver?',
+                        options: ['Backup system', 'Disable antivirus', 'Close all apps', 'All of the above'],
+                        correct: 3 }
+                ] },
+            { name: 'Network & Security', questions: [
+                    { type: 'sequence', title: 'Steps to reset network settings.', steps: ['Open Settings',
+                            'Network & Internet', 'Advanced network settings', 'Network reset'
+                        ] },
+                    { type: 'dragdrop', title: 'Match network issue to cause.',
+                        zones: ['No connectivity', 'Slow speed', 'Security warning'],
+                        items: ['Cable unplugged', 'Bandwidth limit', 'Untrusted certificate'],
+                        correct: { 'Cable unplugged': 'No connectivity', 'Bandwidth limit': 'Slow speed',
+                            'Untrusted certificate': 'Security warning' } },
+                    { type: 'choice', title: 'What is a firewall?', options: ['Blocks unauthorized access',
+                            'Speeds up internet', 'Cleans viruses', 'Manages passwords'
+                        ], correct: 0 },
+                    { type: 'dragdrop', title: 'Match security threat to symptom.',
+                        zones: ['Phishing', 'Ransomware', 'Spyware'],
+                        items: ['Suspicious email', 'Files encrypted', 'Pop-ups & tracking'],
+                        correct: { 'Suspicious email': 'Phishing', 'Files encrypted': 'Ransomware',
+                            'Pop-ups & tracking': 'Spyware' } },
+                    { type: 'choice', title: 'Which built-in Windows tool scans for malware?', options: [
+                            'Windows Defender', 'Disk Cleanup', 'System Restore', 'Task Manager'
+                        ], correct: 0 }
+                ] },
+            { name: 'Backup & Recovery', questions: [
+                    { type: 'sequence', title: 'Steps to restore from a system restore point.', steps: [
+                            'Open System Restore', 'Choose a restore point', 'Confirm', 'Reboot'
+                        ] },
+                    { type: 'dragdrop', title: 'Match backup media to use case.',
+                        zones: ['Cloud', 'External drive', 'Network'],
+                        items: ['Off-site backup', 'Local full backup', 'Shared folder backup'],
+                        correct: { 'Off-site backup': 'Cloud', 'Local full backup': 'External drive',
+                            'Shared folder backup': 'Network' } },
+                    { type: 'choice', title: 'What is a "full backup"?', options: ['Copies all selected files',
+                            'Copies only changed files', 'Copies only system files', 'Copies only user files'
+                        ], correct: 0 },
+                    { type: 'dragdrop', title: 'Match recovery tool to failure type.',
+                        zones: ['Boot failure', 'File corruption', 'Driver issue'],
+                        items: ['Startup Repair', 'SFC /scannow', 'Safe Mode'],
+                        correct: { 'Startup Repair': 'Boot failure', 'SFC /scannow': 'File corruption',
+                            'Safe Mode': 'Driver issue' } },
+                    { type: 'choice', title: 'How often should critical data be backed up?', options: [
+                            'Daily', 'Weekly', 'Monthly', 'Yearly'
+                        ], correct: 0 }
+                ] },
+            { name: 'Advanced Maintenance', questions: [
+                    { type: 'sequence', title: 'Steps to run a system performance report.', steps: [
+                            'Open Performance Monitor', 'Data Collector Sets', 'Start report'
+                        ] },
+                    { type: 'dragdrop', title: 'Match performance metric to issue.',
+                        zones: ['CPU', 'Memory', 'Disk'],
+                        items: ['High usage', 'Low free RAM', 'Slow read/write'],
+                        correct: { 'High usage': 'CPU', 'Low free RAM': 'Memory', 'Slow read/write': 'Disk' } },
+                    { type: 'choice', title: 'What does the "sfc /scannow" command do?', options: [
+                            'Scans for malware', 'Checks system file integrity', 'Defragments the hard drive',
+                            'Updates drivers'
+                        ], correct: 1 },
+                    { type: 'dragdrop', title: 'Match maintenance task to schedule.',
+                        zones: ['Weekly', 'Monthly', 'Quarterly'],
+                        items: ['Temp files cleanup', 'Disk defrag', 'Full system backup'],
+                        correct: { 'Temp files cleanup': 'Weekly', 'Disk defrag': 'Monthly',
+                            'Full system backup': 'Quarterly' } },
+                    { type: 'choice', title: 'What is the best way to monitor system health?', options: [
+                            'Task Manager', 'Performance Monitor', 'Event Viewer', 'All of the above'
+                        ], correct: 3 }
+                ] }
+        ];
+
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        // HELPERS
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        function $(sel) { return document.querySelector(sel); }
+
+        function formatTime(s) { const m = String(Math.floor(s / 60)).padStart(2, '0'); const sec = String(s % 60).padStart(2,
+                '0'); return m + ':' + sec; }
+
+        function startTimer(id) {
+            stopTimer();
+            state.seconds = 0;
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.classList.add('running');
+            state.timerInterval = setInterval(() => { state.seconds++;
+                el.textContent = formatTime(state.seconds); }, 1000);
+        }
+
+        function stopTimer() {
+            if (state.timerInterval) { clearInterval(state.timerInterval);
+                state.timerInterval = null; }
+            document.querySelectorAll('.timer').forEach(el => el.classList.remove('running'));
+        }
+
+        function showScreen(id) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            const el = document.getElementById(id);
+            if (el) el.classList.add('active');
+            document.querySelectorAll('.feedback-overlay').forEach(f => f.classList.remove('show'));
+            stopTimer();
+            state.seconds = 0;
+            if (id === 'screen-main') updateMainMenu();
+        }
+
+        function renderLevelGrid(container, levels, completed, current) {
+            container.innerHTML = '';
+            levels.forEach((lv, idx) => {
+                const div = document.createElement('div');
+                div.className = 'level-card';
+                const isDone = completed.has(idx + 1);
+                const isActive = (idx === current);
+                if (isDone) div.classList.add('completed');
+                if (isActive) div.classList.add('active');
+                if (idx > current + 1) div.classList.add('locked');
+                div.innerHTML =
+                    `<div class="num">${idx+1}</div><div class="name">${lv.name}</div><div class="stars">${isDone ? '★★★★★' : '☆☆☆☆☆'}</div>`;
+                if (idx <= current + 1 && !isDone) {
+                    div.style.cursor = 'pointer';
+                    div.addEventListener('click', () => {
+                        const all = container.querySelectorAll('.level-card');
+                        all.forEach(c => c.classList.remove('active'));
+                        div.classList.add('active');
+                        const parent = container.closest('.screen');
+                        if (parent) {
+                            const id = parent.id.replace('screen-', '');
+                            if (id === 'ohs') state.ohs.level = idx;
+                            else if (id === 'os') state.os.level = idx;
+                            else if (id === 'typing') state.typing.level = idx;
+                            else if (id === 'spreadsheet') state.spreadsheet.level = idx;
+                            else if (id === 'maintenance') state.maintenance.level = idx;
+                        }
+                    });
+                }
+                container.appendChild(div);
+            });
+        }
+
+        function getUnlockStatus() {
+            const modules = ['ohs', 'os', 'typing', 'spreadsheet', 'maintenance'];
+            const status = {};
+            modules.forEach(m => {
+                const total = MODULE_LEVELS[m].length;
+                const done = state[m].completed.size;
+                status[m] = { unlocked: true, progress: `${done}/${total}`, done: done === total,
+                    level: state[m].level };
+            });
+            return status;
+        }
+
+        function updateMainMenu() {
+            const status = getUnlockStatus();
+            const ids = ['ohs', 'os', 'typing', 'spreadsheet', 'maintenance'];
+            ids.forEach(id => {
+                const el = document.getElementById(`menu-${id}`);
+                if (!el) return;
+                const data = status[id];
+                const badge = el.querySelector('.badge');
+                if (data.unlocked) {
+                    el.classList.remove('locked');
+                    if (badge) {
+                        if (data.done) {
+                            badge.textContent = '✅ Complete';
+                            badge.style.background = '#2d8f5e';
+                            badge.style.color = '#fff';
+                        } else {
+                            const lv = data.level + 1;
+                            badge.textContent = `Lv.${lv}`;
+                            badge.style.background = '#f5a623';
+                            badge.style.color = '#121820';
+                        }
+                    }
+                } else {
+                    el.classList.add('locked');
+                    if (badge) {
+                        badge.textContent = '🔒 Locked';
+                        badge.style.background = '#4a5a70';
+                        badge.style.color = '#aab8c8';
+                    }
+                }
+            });
+            let totalDone = 0,
+                totalAll = 0;
+            ids.forEach(id => {
+                totalDone += state[id].completed.size;
+                totalAll += MODULE_LEVELS[id].length;
+            });
+            const pct = totalAll ? Math.round((totalDone / totalAll) * 100) : 0;
+            document.getElementById('overallProgress').textContent = pct + '%';
+            document.getElementById('overallFill').style.width = pct + '%';
+        }
+
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        // GLOSSARY FUNCTIONS
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        function populateGlossary() {
+            const list = document.getElementById('glossaryList');
+            list.innerHTML = '';
+            for (const [acro, meaning] of Object.entries(GLOSSARY)) {
+                const item = document.createElement('div');
+                item.className = 'glossary-item';
+                item.innerHTML = `<span class="acronym">${acro}</span><span class="meaning">${meaning}</span>`;
+                list.appendChild(item);
+            }
+        }
+
+        function toggleGlossary(show) {
+            const overlay = document.getElementById('glossaryOverlay');
+            if (show === undefined) {
+                overlay.classList.toggle('active');
+            } else if (show) {
+                overlay.classList.add('active');
+            } else {
+                overlay.classList.remove('active');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            populateGlossary();
+            document.getElementById('glossaryCloseBtn').addEventListener('click', () => toggleGlossary(false));
+            document.querySelectorAll('.glossary-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    toggleGlossary(true);
+                });
+            });
+            document.getElementById('glossaryOverlay').addEventListener('click', function(e) {
+                if (e.target === this) toggleGlossary(false);
+            });
+        });
+
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        // NAVIGATION
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        document.querySelectorAll('[data-back]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                if (btn.dataset.back === 'main') {
+                    showScreen('screen-main');
+                    ['ohs', 'os', 'typing', 'spreadsheet', 'maintenance'].forEach(m => {
+                        const sel = document.getElementById(m + '-select');
+                        if (sel) sel.style.display = '';
+                        const instr = document.getElementById(m + '-instructions');
+                        if (instr) instr.style.display = 'none';
+                        const game = document.getElementById(m + '-game');
+                        if (game) game.style.display = 'none';
+                        const fb = document.getElementById(m + 'FeedbackOverlay');
+                        if (fb) fb.classList.remove('show');
+                    });
+                }
+            });
+        });
+
+        document.querySelectorAll('.menu-item[data-game]').forEach(item => {
+            item.addEventListener('click', function() {
+                const game = this.dataset.game;
+                const status = getUnlockStatus();
+                if (!status[game].unlocked) {
+                    this.classList.add('shake');
+                    setTimeout(() => this.classList.remove('shake'), 500);
+                    return;
+                }
+                initModule(game);
+                showScreen('screen-' + game);
+            });
+        });
+
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        // MODULE INIT
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        function initModule(moduleId) {
+            const levels = MODULE_LEVELS[moduleId];
+            if (!levels) return;
+            const container = document.getElementById(moduleId + 'LevelGrid');
+            if (!container) return;
+            renderLevelGrid(container, levels, state[moduleId].completed, state[moduleId].level);
+            document.getElementById(moduleId + '-select').style.display = '';
+            document.getElementById(moduleId + '-instructions').style.display = 'none';
+            document.getElementById(moduleId + '-game').style.display = 'none';
+            document.getElementById(moduleId + 'FeedbackOverlay').classList.remove('show');
+            const nextBtn = document.getElementById(moduleId + 'NextBtn');
+            if (nextBtn) nextBtn.disabled = true;
+        }
+
+        document.querySelectorAll('[id$="StartBtn"]').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const moduleId = this.id.replace('StartBtn', '');
+                const levels = MODULE_LEVELS[moduleId];
+                const lv = state[moduleId].level;
+                const data = levels[lv];
+                if (!data) return;
+                document.getElementById(moduleId + '-select').style.display = 'none';
+                document.getElementById(moduleId + '-instructions').style.display = '';
+                document.getElementById(moduleId + 'InstrObj').textContent = `🎯 Level ${lv+1}: ${data.name}`;
+                document.getElementById(moduleId + 'InstrDetail').textContent = 'Complete all 5 challenges.';
+            });
+        });
+
+        document.querySelectorAll('[id$="PlayBtn"]').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const moduleId = this.id.replace('PlayBtn', '');
+                document.getElementById(moduleId + '-instructions').style.display = 'none';
+                document.getElementById(moduleId + '-game').style.display = '';
+                startGame(moduleId);
+            });
+        });
+
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        // GAME ENGINE
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        let currentGame = {
+            moduleId: '',
+            levelData: null,
+            questions: [],
+            currentQ: 0,
+            answers: [],
+            feedbackEl: null,
+            nextBtn: null,
+            resetBtn: null,
+            gameArea: null,
+            isComplete: false,
+        };
+
+        // Map module to icon sets for drag items, zones, etc.
+        const ICON_MAP = {
+            ohs: { drag: { 'Hard Hat': '⛑️', 'Gloves': '🧤', 'Safety Shoes': '🥾', 'Ear Plugs': '🔇', 'Goggles': '🥽',
+                    'Eye level': '👁️', 'Back support': '🪑', 'Flat wrist': '✋', 'Use surge protector': '🔌',
+                    'Inspect regularly': '🔍', 'Discharge before touching': '⚡', 'Safety glasses': '👓',
+                    'Back belt': '🦺', 'Gloves': '🧤', 'Yellow triangle': '⚠️', 'Blue circle': '🔵',
+                    'Red circle with slash': '🚫', 'Evacuate': '🏃', 'Drop, cover, hold': '🛡️',
+                    'Ventilate area': '🌬️', 'Combustible materials': '🔥', 'Flammable liquids': '🧪',
+                    'Electrical equipment': '⚡', 'Remove hazard': '❌', 'Replace with safer': '🔄',
+                    'Isolate with guard': '🛡️', 'Blurry vision': '👀', 'Numb fingers': '🖐️', 'Lower back ache': '💢'
+                }, zone: { 'Head': '🧠', 'Hands': '🤲', 'Feet': '🦶', 'Monitor': '🖥️', 'Chair': '🪑',
+                    'Keyboard': '⌨️', 'Overload': '⚡', 'Cable damage': '🔌', 'Residual charge': '💥',
+                    'Soldering': '🔥', 'Heavy lifting': '🏋️', 'Chemical handling': '🧪', 'Warning': '⚠️',
+                    'Mandatory': '🔵', 'Prohibition': '🚫', 'Fire': '🔥', 'Earthquake': '🌍',
+                    'Chemical spill': '🧪', 'Class A': '🔥', 'Class B': '🧪', 'Class C': '⚡',
+                    'Eye strain': '👁️', 'Carpal tunnel': '🖐️', 'Back pain': '💢', 'Elimination': '❌',
+                    'Substitution': '🔄', 'Engineering': '🛠️' } },
+            os: { drag: { 'report.docx': '📄', 'budget.xlsx': '📊', 'photo.png': '🖼️', 'notes.txt': '📝',
+                    'data.csv': '📈', 'project_plan.docx': '📄', 'family_photo.jpg': '🖼️',
+                    'old_reports.zip': '📦', 'invoice.xlsx': '📊', 'vacation_pic.png': '🖼️',
+                    'Cannot modify': '🔒', 'Not visible': '👻', 'Backup flag': '💾', 'boot.ini': '⚙️',
+                    'settings.cfg': '⚙️', 'error.log': '📋', 'Incremental': '➕', 'Differential': '🔁',
+                    'Full': '📦', 'PDFs': '📄', 'Videos': '🎬', 'Executables': '⚙️',
+                    'Restore from backup': '💾', 'Use antivirus': '🛡️', 'Recover from recycle bin': '♻️'
+                }, zone: { 'Document': '📄', 'Spreadsheet': '📊', 'Image': '🖼️', 'Work': '💼',
+                    'Personal': '👤', 'Archive': '📦', 'Read-only': '🔒', 'Hidden': '👻',
+                    'Archive': '📦', 'Word': '📄', 'Excel': '📊', 'PowerPoint': '📽️',
+                    'Primary': '💾', 'Backup': '🔁', 'Archive': '📦', 'Boot': '⚙️', 'Config': '⚙️',
+                    'Log': '📋', 'Daily': '📅', 'Weekly': '📅', 'Monthly': '📅', 'Documents': '📄',
+                    'Media': '🎬', 'Programs': '⚙️', 'Hardware failure': '💻', 'Ransomware': '💀',
+                    'Accidental deletion': '🗑️' } },
+            typing: { drag: { 'ASDF': '🖐️', 'JKL;': '🖐️', 'Ctrl+Shift+Esc': '⌨️', 'Alt+Tab': '🔄',
+                    'Windows+D': '🖥️', 'Ctrl+C': '📋', 'Ctrl+V': '📋', 'Ctrl+Z': '↩️',
+                    'Windows+E': '📁', 'Windows+R': '▶️', 'Windows+I': '⚙️', 'Ctrl+A': '📋',
+                    'Ctrl+F': '🔍', 'Ctrl+S': '💾', 'Ctrl+B': '🔤', 'Ctrl+I': '🔤', 'Ctrl+U': '🔤',
+                    'Windows+Shift+S': '📸', 'Windows+Plus': '🔍', 'Windows+Ctrl+Enter': '🔊',
+                    'Windows+Alt+Print Screen': '🎨', 'Windows+V': '📋', 'Click to paste': '🖱️'
+                }, zone: { 'Left Hand': '🖐️', 'Right Hand': '🖐️', 'Task Manager': '⚙️',
+                    'Switch App': '🔄', 'Show Desktop': '🖥️', 'Copy': '📋', 'Paste': '📋',
+                    'Undo': '↩️', 'Open Explorer': '📁', 'Run dialog': '▶️', 'Settings': '⚙️',
+                    'Select all': '📋', 'Find': '🔍', 'Save': '💾', 'Bold': '🔤', 'Italic': '🔤',
+                    'Underline': '🔤', 'Snipping Tool': '📸', 'Magnifier': '🔍', 'Narrator': '🔊',
+                    'High Contrast': '🎨', 'Open history': '📋', 'Paste selected': '🖱️' } },
+            spreadsheet: { drag: { '=SUM(': '🔢', 'A1:A10': '🔢', ')': '🔢', '=COUNT(': '🔢', '=AVERAGE(': '🔢',
+                    'B1:B10': '🔢', '=': '🔢', '+': '➕', 'A1': '🔢', 'B1': '🔢', '=SUM': '🔢',
+                    '=AVERAGE': '🔢', '=COUNT': '🔢', '=IF(': '🔢', 'A1>10': '🔢', ',"Yes","No")': '🔢',
+                    '=VLOOKUP(': '🔢', 'A2': '🔢', ',': '🔢', 'B:C': '🔢', '2': '🔢', 'FALSE)': '🔢'
+                }, zone: { '=SUM(': '🔢', 'A1:A10': '🔢', ')': '🔢', '=COUNT(': '🔢', '=AVERAGE(': '🔢',
+                    'B1:B10': '🔢', '=': '🔢', '+': '➕', 'A1': '🔢', 'B1': '🔢', 'SUM': '🔢',
+                    'AVERAGE': '🔢', 'COUNT': '🔢', '=IF(': '🔢', '>10': '🔢', ',"Yes","No")': '🔢',
+                    'SUMIF': '🔢', 'VLOOKUP': '🔢', 'CONCATENATE': '🔢', 'Whole number': '🔢',
+                    'Decimal': '🔢', 'List': '📋', 'Sheet': '📄', 'Workbook': '📚', 'Cell': '🔲' } },
+            maintenance: { drag: { 'Check memory': '🧠', 'Reset router': '📡', 'Run disk cleanup': '🧹',
+                    'Video card': '🖥️', 'Ethernet adapter': '📡', 'Sound card': '🔊',
+                    'Free up space': '🧹', 'Optimize files': '📁', 'Repair disk errors': '🔧',
+                    'Cable unplugged': '🔌', 'Bandwidth limit': '📡', 'Untrusted certificate': '🔒',
+                    'Suspicious email': '📧', 'Files encrypted': '💀', 'Pop-ups & tracking': '🕵️',
+                    'Off-site backup': '☁️', 'Local full backup': '💾', 'Shared folder backup': '📁',
+                    'Startup Repair': '🔧', 'SFC /scannow': '🔧', 'Safe Mode': '🛡️',
+                    'High usage': '📈', 'Low free RAM': '🧠', 'Slow read/write': '💾',
+                    'Temp files cleanup': '🧹', 'Disk defrag': '📁', 'Full system backup': '💾'
+                }, zone: { 'Blue screen': '💻', 'No internet': '📡', 'Slow PC': '🐢',
+                    'Graphics': '🖥️', 'Network': '📡', 'Audio': '🔊',
+                    'Disk Cleanup': '🧹', 'Defragment': '📁', 'Check Disk': '🔧',
+                    'No connectivity': '📡', 'Slow speed': '🐢', 'Security warning': '🔒',
+                    'Phishing': '📧', 'Ransomware': '💀', 'Spyware': '🕵️',
+                    'Cloud': '☁️', 'External drive': '💾', 'Network': '📡',
+                    'Boot failure': '💻', 'File corruption': '📄', 'Driver issue': '🔧',
+                    'CPU': '⚙️', 'Memory': '🧠', 'Disk': '💾',
+                    'Weekly': '📅', 'Monthly': '📅', 'Quarterly': '📅' } }
+        };
+
+        function getIcon(type, key, moduleId) {
+            const map = ICON_MAP[moduleId]?.[type];
+            if (map && map[key]) return map[key];
+            return '';
+        }
+
+        // ─── RENDER FUNCTIONS WITH ICONS AND ACRONYM TOOLTIPS ───
+        function renderDragDropQ(area, q, moduleId) {
+            const zonesDiv = document.createElement('div');
+            zonesDiv.className = 'drop-zones';
+            q.zones.forEach(zone => {
+                const z = document.createElement('div');
+                z.className = 'drop-zone';
+                z.dataset.zone = zone;
+                const icon = getIcon('zone', zone, moduleId);
+                z.innerHTML = `<span class="zone-label">${icon ? `<span class="zone-icon">${icon}</span>` : ''} ${zone}</span><div class="zone-items" id="zone-${zone}"></div>`;
+                zonesDiv.appendChild(z);
+            });
+            area.appendChild(zonesDiv);
+
+            const itemsDiv = document.createElement('div');
+            itemsDiv.className = 'drag-items';
+            itemsDiv.id = 'dragItems';
+            q.items.forEach(item => {
+                const el = document.createElement('div');
+                el.className = 'drag-item';
+                const icon = getIcon('drag', item, moduleId);
+                el.innerHTML = `${icon ? `<span class="item-icon">${icon}</span>` : ''} ${wrapAcronyms(item)}`;
+                el.draggable = true;
+                el.dataset.item = item;
+                el.addEventListener('dragstart', onDragStart);
+                el.addEventListener('dragend', onDragEnd);
+                el.addEventListener('touchstart', onTouchStart, { passive: true });
+                el.addEventListener('touchmove', onTouchMove, { passive: false });
+                el.addEventListener('touchend', onTouchEnd, { passive: true });
+                itemsDiv.appendChild(el);
+            });
+            area.appendChild(itemsDiv);
+
+            zonesDiv.addEventListener('dragover', onDragOver);
+            zonesDiv.addEventListener('drop', onDrop);
+            document.querySelectorAll('.drop-zone').forEach(zone => {
+                zone.addEventListener('dragenter', onDragEnter);
+                zone.addEventListener('dragleave', onDragLeave);
+            });
+
+            area.dataset.placed = JSON.stringify({});
+            area.dataset.correct = JSON.stringify(q.correct);
+        }
+
+        function renderSequenceQ(area, q, moduleId) {
+            const seqDiv = document.createElement('div');
+            seqDiv.className = 'sequence-items';
+            const shuffled = q.shuffledSteps || q.steps;
+            shuffled.forEach((step, idx) => {
+                const el = document.createElement('div');
+                el.className = 'seq-item';
+                const icon = getIcon('drag', step, moduleId) || '🔢';
+                el.innerHTML = `${icon ? `<span class="seq-icon">${icon}</span>` : ''} ${wrapAcronyms(step)}`;
+                el.dataset.idx = idx;
+                el.dataset.step = step;
+                el.addEventListener('click', function() {
+                    if (this.classList.contains('disabled') || this.classList.contains('correct')) return;
+                    handleSeqClick(area, q, this);
+                });
+                seqDiv.appendChild(el);
+            });
+            area.appendChild(seqDiv);
+            area.dataset.seqIndex = '0';
+            area.dataset.seqCorrect = JSON.stringify(q.correctOrder);
+            area.dataset.seqClicked = JSON.stringify([]);
+        }
+
+        function renderChoiceQ(area, q, moduleId) {
+            const optsDiv = document.createElement('div');
+            optsDiv.className = 'choice-options';
+            q.options.forEach((opt, idx) => {
+                const el = document.createElement('div');
+                el.className = 'choice-opt';
+                const icon = getIcon('drag', opt, moduleId) || '🔘';
+                el.innerHTML = `${icon ? `<span class="choice-icon">${icon}</span>` : ''} ${wrapAcronyms(opt)}`;
+                el.dataset.idx = idx;
+                el.addEventListener('click', function() {
+                    if (this.classList.contains('disabled')) return;
+                    handleChoiceClick(area, q, this);
+                });
+                optsDiv.appendChild(el);
+            });
+            area.appendChild(optsDiv);
+            area.dataset.choiceAnswered = 'false';
+        }
+
+        function renderQuestion(moduleId, idx) {
+            try {
+                const q = currentGame.questions[idx];
+                if (!q) {
+                    console.error('No question at index', idx);
+                    return;
+                }
+                const area = currentGame.gameArea;
+                const feedback = currentGame.feedbackEl;
+                const progress = document.getElementById('qProgress');
+                area.innerHTML = '';
+                area.appendChild(progress);
+                area.appendChild(feedback);
+                document.getElementById('qNum').textContent = idx + 1;
+
+                const title = document.createElement('div');
+                title.className = 'task-title';
+                let icon = '';
+                if (q.type === 'dragdrop') icon = '🔄';
+                else if (q.type === 'sequence') icon = '🔢';
+                else if (q.type === 'choice') icon = '✅';
+                title.innerHTML = `${icon ? `<span class="task-icon">${icon}</span>` : ''} ${wrapAcronyms(q.title || 'Challenge')}`;
+                area.appendChild(title);
+
+                if (q.type === 'dragdrop') renderDragDropQ(area, q, moduleId);
+                else if (q.type === 'sequence') renderSequenceQ(area, q, moduleId);
+                else if (q.type === 'choice') renderChoiceQ(area, q, moduleId);
+                else {
+                    feedback.textContent = 'Unknown challenge type.';
+                    feedback.className = 'game-feedback error';
+                }
+
+                currentGame.nextBtn.disabled = true;
+                feedback.textContent = 'Complete the challenge to proceed.';
+                feedback.className = 'game-feedback info';
+                area.dataset.qidx = idx;
+            } catch (e) {
+                console.error('Error rendering question:', e);
+                const area = currentGame.gameArea;
+                area.innerHTML = `<div style="color:#f87171;padding:20px;text-align:center;">⚠️ Error loading question. Please reset.</div>`;
+            }
+        }
+
+        // ─── DRAG EVENTS ───
+        let dragData = null;
+
+        function onDragStart(e) {
+            const el = e.target.closest('.drag-item');
+            if (!el) return;
+            dragData = { item: el.dataset.item, el: el };
+            el.classList.add('dragging');
+            e.dataTransfer.setData('text/plain', el.dataset.item);
+            e.dataTransfer.effectAllowed = 'move';
+            const ghost = document.getElementById('dragGhost');
+            ghost.innerHTML = el.innerHTML;
+            ghost.style.display = 'block';
+            ghost.style.left = e.clientX + 'px';
+            ghost.style.top = e.clientY + 'px';
+        }
+
+        function onDragEnd(e) {
+            const el = e.target.closest('.drag-item');
+            if (el) el.classList.remove('dragging');
+            document.querySelectorAll('.drop-zone').forEach(z => z.classList.remove('drag-over'));
+            document.getElementById('dragGhost').style.display = 'none';
+        }
+
+        function onDragOver(e) { e.preventDefault();
+            e.dataTransfer.dropEffect = 'move'; }
+
+        function onDragEnter(e) { e.preventDefault(); const zone = e.target.closest('.drop-zone'); if (zone) zone.classList.add(
+                'drag-over'); }
+
+        function onDragLeave(e) { const zone = e.target.closest('.drop-zone'); if (zone) zone.classList.remove('drag-over'); }
+
+        function onDrop(e) {
+            e.preventDefault();
+            const zone = e.target.closest('.drop-zone');
+            if (!zone) return;
+            zone.classList.remove('drag-over');
+            const item = e.dataTransfer.getData('text/plain');
+            if (!item) return;
+            placeDragItem(zone, item);
+        }
+
+        let touchDragItem = null;
+        let touchGhost = document.getElementById('dragGhost');
+
+        function onTouchStart(e) {
+            const el = e.target.closest('.drag-item');
+            if (!el) return;
+            touchDragItem = el;
+            const touch = e.touches[0];
+            touchGhost.innerHTML = el.innerHTML;
+            touchGhost.style.display = 'block';
+            touchGhost.style.left = touch.clientX + 'px';
+            touchGhost.style.top = touch.clientY + 'px';
+            el.classList.add('dragging');
+        }
+
+        function onTouchMove(e) {
+            if (!touchDragItem) return;
+            e.preventDefault();
+            const touch = e.touches[0];
+            touchGhost.style.left = touch.clientX + 'px';
+            touchGhost.style.top = touch.clientY + 'px';
+            document.querySelectorAll('.drop-zone').forEach(z => z.classList.remove('drag-over'));
+            const el = document.elementFromPoint(touch.clientX, touch.clientY);
+            const zone = el ? el.closest('.drop-zone') : null;
+            if (zone) zone.classList.add('drag-over');
+        }
+
+        function onTouchEnd(e) {
+            if (!touchDragItem) return;
+            touchGhost.style.display = 'none';
+            touchDragItem.classList.remove('dragging');
+            const touch = e.changedTouches[0];
+            const el = document.elementFromPoint(touch.clientX, touch.clientY);
+            const zone = el ? el.closest('.drop-zone') : null;
+            document.querySelectorAll('.drop-zone').forEach(z => z.classList.remove('drag-over'));
+            if (zone) {
+                const item = touchDragItem.dataset.item;
+                placeDragItem(zone, item);
+            }
+            touchDragItem = null;
+        }
+
+        function placeDragItem(zone, item) {
+            const area = zone.closest('.game-area');
+            const qidx = parseInt(area.dataset.qidx);
+            const q = currentGame.questions[qidx];
+            let placed = JSON.parse(area.dataset.placed || '{}');
+
+            if (placed[item]) {
+                const oldZone = document.querySelector(`.drop-zone[data-zone="${placed[item]}"]`);
+                if (oldZone) {
+                    const container = oldZone.querySelector('.zone-items');
+                    const oldItem = container.querySelector(`[data-item="${item}"]`);
+                    if (oldItem) oldItem.remove();
+                }
+                const dragItems = area.querySelector('#dragItems');
+                const existing = dragItems.querySelector(`[data-item="${item}"]`);
+                if (!existing) {
+                    const newEl = document.createElement('div');
+                    newEl.className = 'drag-item';
+                    const icon = getIcon('drag', item, currentGame.moduleId);
+                    newEl.innerHTML = `${icon ? `<span class="item-icon">${icon}</span>` : ''} ${wrapAcronyms(item)}`;
+                    newEl.draggable = true;
+                    newEl.dataset.item = item;
+                    newEl.addEventListener('dragstart', onDragStart);
+                    newEl.addEventListener('dragend', onDragEnd);
+                    newEl.addEventListener('touchstart', onTouchStart, { passive: true });
+                    newEl.addEventListener('touchmove', onTouchMove, { passive: false });
+                    newEl.addEventListener('touchend', onTouchEnd, { passive: true });
+                    dragItems.appendChild(newEl);
+                }
+                delete placed[item];
+            }
+
+            const zoneItems = zone.querySelector('.zone-items');
+            const itemEl = document.createElement('div');
+            itemEl.className = 'zone-item';
+            itemEl.textContent = item;
+            itemEl.dataset.item = item;
+            zoneItems.appendChild(itemEl);
+
+            const dragItems = area.querySelector('#dragItems');
+            const dragEl = dragItems.querySelector(`[data-item="${item}"]`);
+            if (dragEl) dragEl.remove();
+
+            placed[item] = zone.dataset.zone;
+            area.dataset.placed = JSON.stringify(placed);
+
+            const totalItems = q.items.length;
+            if (Object.keys(placed).length === totalItems) {
+                currentGame.nextBtn.disabled = false;
+                currentGame.feedbackEl.textContent = 'All items placed! Click NEXT to check.';
+                currentGame.feedbackEl.className = 'game-feedback success';
+            } else {
+                currentGame.feedbackEl.textContent = `Placed ${Object.keys(placed).length}/${totalItems} items.`;
+                currentGame.feedbackEl.className = 'game-feedback info';
+            }
+        }
+
+        // ─── SEQUENCE CLICK ───
+        function handleSeqClick(area, q, el) {
+            if (el.classList.contains('disabled')) return;
+            let seqIndex = parseInt(area.dataset.seqIndex || '0');
+            const correctOrder = JSON.parse(area.dataset.seqCorrect);
+            const clicked = JSON.parse(area.dataset.seqClicked || '[]');
+            const step = el.dataset.step;
+            const expected = correctOrder[seqIndex];
+            if (step === expected) {
+                el.classList.add('correct');
+                el.classList.add('disabled');
+                clicked.push(step);
+                seqIndex++;
+                area.dataset.seqIndex = seqIndex;
+                area.dataset.seqClicked = JSON.stringify(clicked);
+                currentGame.feedbackEl.textContent = `✅ Correct! (${seqIndex}/${correctOrder.length})`;
+                currentGame.feedbackEl.className = 'game-feedback success';
+                if (seqIndex === correctOrder.length) {
+                    currentGame.nextBtn.disabled = false;
+                    currentGame.feedbackEl.textContent = '🎉 Sequence complete! Click NEXT.';
+                }
+            } else {
+                el.classList.add('wrong');
+                currentGame.feedbackEl.textContent = `❌ Wrong. Expected "${expected}"`;
+                currentGame.feedbackEl.className = 'game-feedback error';
+                setTimeout(() => el.classList.remove('wrong'), 800);
+            }
+        }
+
+        // ─── CHOICE CLICK ───
+        function handleChoiceClick(area, q, el) {
+            if (area.dataset.choiceAnswered === 'true') return;
+            const idx = parseInt(el.dataset.idx);
+            const correct = q.correct;
+            const options = area.querySelectorAll('.choice-opt');
+            options.forEach(opt => opt.classList.add('disabled'));
+            if (idx === correct) {
+                el.classList.add('selected-correct');
+                currentGame.feedbackEl.textContent = '✅ Correct!';
+                currentGame.feedbackEl.className = 'game-feedback success';
+                area.dataset.choiceAnswered = 'true';
+                currentGame.nextBtn.disabled = false;
+            } else {
+                el.classList.add('selected-wrong');
+                options[correct].classList.add('selected-correct');
+                currentGame.feedbackEl.textContent = `❌ Incorrect. The correct answer was: "${q.options[correct]}"`;
+                currentGame.feedbackEl.className = 'game-feedback error';
+                area.dataset.choiceAnswered = 'true';
+                setTimeout(() => { currentGame.nextBtn.disabled = false; }, 500);
+            }
+        }
+
+        // ─── GAME ENGINE FUNCTIONS ───
+        function startGame(moduleId) {
+            const levels = MODULE_LEVELS[moduleId];
+            const lv = state[moduleId].level;
+            const data = levels[lv];
+            if (!data) {
+                console.error('No level data for', moduleId, lv);
+                return;
+            }
+
+            currentGame.moduleId = moduleId;
+            currentGame.levelData = data;
+            currentGame.currentQ = 0;
+            currentGame.answers = [];
+            currentGame.isComplete = false;
+
+            currentGame.questions = data.questions.map(q => {
+                const qCopy = JSON.parse(JSON.stringify(q));
+                if (qCopy.type === 'dragdrop') {
+                    const items = qCopy.items;
+                    const shuffledItems = shuffleArray([...items]);
+                    const newCorrect = {};
+                    shuffledItems.forEach(item => { newCorrect[item] = qCopy.correct[item]; });
+                    qCopy.items = shuffledItems;
+                    qCopy.correct = newCorrect;
+                } else if (qCopy.type === 'sequence') {
+                    const steps = qCopy.steps;
+                    qCopy.shuffledSteps = shuffleArray([...steps]);
+                    qCopy.correctOrder = steps;
+                } else if (qCopy.type === 'choice') {
+                    const options = qCopy.options;
+                    const shuffled = shuffleArray([...options]);
+                    const correctText = options[qCopy.correct];
+                    qCopy.options = shuffled;
+                    qCopy.correct = shuffled.indexOf(correctText);
+                }
+                return qCopy;
+            });
+
+            document.getElementById(moduleId + 'GameLevel').textContent = 'Level ' + (lv + 1);
+            document.getElementById(moduleId + 'GameStars').textContent = '★★★★★';
+            startTimer(moduleId + 'GameTimer');
+            document.getElementById(moduleId + 'FeedbackOverlay').classList.remove('show');
+
+            const area = document.getElementById(moduleId + 'GameArea');
+            area.innerHTML = '';
+            currentGame.gameArea = area;
+            currentGame.feedbackEl = document.createElement('div');
+            currentGame.feedbackEl.className = 'game-feedback';
+            area.appendChild(currentGame.feedbackEl);
+
+            const progressDiv = document.createElement('div');
+            progressDiv.className = 'question-progress';
+            progressDiv.id = 'qProgress';
+            progressDiv.innerHTML = `Question <span id="qNum">1</span> / ${currentGame.questions.length}`;
+            area.appendChild(progressDiv);
+
+            const resetBtn = document.getElementById(moduleId + 'ResetBtn');
+            const nextBtn = document.getElementById(moduleId + 'NextBtn');
+            const newReset = resetBtn.cloneNode(true);
+            const newNext = nextBtn.cloneNode(true);
+            resetBtn.parentNode.replaceChild(newReset, resetBtn);
+            nextBtn.parentNode.replaceChild(newNext, nextBtn);
+
+            currentGame.resetBtn = document.getElementById(moduleId + 'ResetBtn');
+            currentGame.nextBtn = document.getElementById(moduleId + 'NextBtn');
+
+            currentGame.resetBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                resetCurrentLevel(moduleId);
+            });
+
+            currentGame.nextBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                nextQuestion(moduleId);
+            });
+
+            currentGame.nextBtn.disabled = true;
+            currentGame.nextBtn.textContent = '➜ NEXT';
+
+            renderQuestion(moduleId, 0);
+        }
+
+        function resetCurrentLevel(moduleId) {
+            document.getElementById(moduleId + 'FeedbackOverlay').classList.remove('show');
+            startGame(moduleId);
+        }
+
+        function nextQuestion(moduleId) {
+            if (currentGame.isComplete) return;
+            const idx = currentGame.currentQ;
+            const area = currentGame.gameArea;
+            const q = currentGame.questions[idx];
+            let correct = false;
+
+            if (q.type === 'dragdrop') {
+                const placed = JSON.parse(area.dataset.placed || '{}');
+                const correctMap = JSON.parse(area.dataset.correct || '{}');
+                let allCorrect = true;
+                for (const [item, zone] of Object.entries(placed)) {
+                    if (correctMap[item] !== zone) { allCorrect = false; break; }
+                }
+                correct = allCorrect && Object.keys(placed).length === q.items.length;
+                document.querySelectorAll('.zone-item').forEach(el => {
+                    const item = el.dataset.item;
+                    const zone = el.closest('.drop-zone').dataset.zone;
+                    if (correctMap[item] === zone) el.classList.add('correct');
+                    else el.classList.add('wrong');
+                });
+            } else if (q.type === 'sequence') {
+                const clicked = JSON.parse(area.dataset.seqClicked || '[]');
+                const correctOrder = JSON.parse(area.dataset.seqCorrect);
+                correct = clicked.length === correctOrder.length;
+            } else if (q.type === 'choice') {
+                correct = area.dataset.choiceAnswered === 'true';
+                const opts = area.querySelectorAll('.choice-opt');
+                let selectedCorrect = false;
+                opts.forEach(opt => { if (opt.classList.contains('selected-correct')) selectedCorrect = true; });
+                correct = selectedCorrect;
+            }
+
+            currentGame.answers.push(correct);
+
+            if (currentGame.currentQ < currentGame.questions.length - 1) {
+                currentGame.currentQ++;
+                renderQuestion(moduleId, currentGame.currentQ);
+                currentGame.nextBtn.disabled = true;
+            } else {
+                finishLevel(moduleId);
+            }
+        }
+
+        function finishLevel(moduleId) {
+            if (currentGame.isComplete) return;
+            currentGame.isComplete = true;
+            stopTimer();
+
+            const correctCount = currentGame.answers.filter(a => a).length;
+            const total = currentGame.answers.length;
+            const allCorrect = (correctCount === total);
+
+            if (allCorrect) {
+                const lv = state[moduleId].level;
+                state[moduleId].completed.add(lv + 1);
+                updateMainMenu();
+            }
+
+            const xp = 20 + correctCount * 10 + Math.max(0, 60 - state.seconds) * 0.5;
+            const overlay = document.getElementById(moduleId + 'FeedbackOverlay');
+
+            if (allCorrect) {
+                document.getElementById(moduleId + 'FbIcon').textContent = '🎉';
+                document.getElementById(moduleId + 'FbTitle').textContent = 'Level Complete!';
+                document.getElementById(moduleId + 'FbTitle').className = 'fb-title gold';
+                document.getElementById(moduleId + 'FbSub').textContent = `You got ${correctCount}/${total} correct!`;
+                document.getElementById(moduleId + 'FbScore').innerHTML =
+                    `<div class="row"><span class="label">Time Bonus</span><span>+${Math.max(0, 60 - state.seconds)} XP</span></div><div class="row"><span class="label">Accuracy Bonus</span><span>+${correctCount * 10} XP</span></div><div class="row"><span class="label">TOTAL XP</span><span class="text-glow" style="color:#f5a623;">${Math.round(xp)} XP</span></div>`;
+                document.getElementById(moduleId + 'FbNext').style.display = (state[moduleId].level < MODULE_LEVELS[
+                    moduleId].length - 1) ? '' : 'none';
+                document.getElementById(moduleId + 'FbReplay').textContent = '↻ REPLAY';
+            } else {
+                document.getElementById(moduleId + 'FbIcon').textContent = '💪';
+                document.getElementById(moduleId + 'FbTitle').textContent = 'Keep Trying!';
+                document.getElementById(moduleId + 'FbTitle').className = 'fb-title gold';
+                document.getElementById(moduleId + 'FbSub').textContent = `You got ${correctCount}/${total} correct. Need all correct to pass.`;
+                document.getElementById(moduleId + 'FbScore').innerHTML =
+                    `<div class="row"><span class="label">Score</span><span>${correctCount}/${total}</span></div>`;
+                document.getElementById(moduleId + 'FbNext').style.display = 'none';
+                document.getElementById(moduleId + 'FbReplay').textContent = '↻ RETRY';
+            }
+            overlay.classList.add('show');
+            if (currentGame.nextBtn) currentGame.nextBtn.disabled = true;
+        }
+
+        document.querySelectorAll('[id$="FbReplay"]').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const moduleId = this.id.replace('FbReplay', '');
+                document.getElementById(moduleId + 'FeedbackOverlay').classList.remove('show');
+                if (this.textContent === '↻ BACK') {
+                    document.getElementById(moduleId + '-game').style.display = 'none';
+                    document.getElementById(moduleId + '-select').style.display = '';
+                    return;
+                }
+                startGame(moduleId);
+            });
+        });
+
+        document.querySelectorAll('[id$="FbNext"]').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const moduleId = this.id.replace('FbNext', '');
+                document.getElementById(moduleId + 'FeedbackOverlay').classList.remove('show');
+                const levels = MODULE_LEVELS[moduleId];
+                if (state[moduleId].level < levels.length - 1) {
+                    state[moduleId].level++;
+                    document.getElementById(moduleId + '-game').style.display = 'none';
+                    document.getElementById(moduleId + '-select').style.display = '';
+                    renderLevelGrid(document.getElementById(moduleId + 'LevelGrid'), levels, state[moduleId]
+                        .completed, state[moduleId].level);
+                } else {
+                    document.getElementById(moduleId + '-game').style.display = 'none';
+                    document.getElementById(moduleId + '-select').style.display = '';
+                    updateMainMenu();
+                }
+            });
+        });
+
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        // INIT
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        // Ensure glossary is populated before any interaction
+        document.addEventListener('DOMContentLoaded', function() {
+            // Already done above
+        });
+
+        showScreen('screen-main');
+        updateMainMenu();
+        console.log('💻 PC Ops Interactive – Icons, glossary, and acronym tooltips added!');
+    </script>
+</body>
+</html>

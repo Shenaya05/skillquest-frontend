@@ -1,0 +1,2963 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SkillQuest – TESDA Gamified Assessment</title>
+    <style>
+        /* ── Fonts ── */
+        @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap');
+
+        /* ── Variables ── */
+        :root {
+            --bg: #0d0f1a;
+            --panel: #161928;
+            --card: #1c2035;
+            --border: #2a2f4a;
+            --accent1: #3d82f6;
+            --accent2: #22d3a5;
+            --accent3: #f59e0b;
+            --accent4: #ef4444;
+            --text: #e8eaf0;
+            --muted: #7b82a0;
+            --eim: #f59e0b;
+            --ccs: #22d3a5;
+            --pcops: #a855f7;
+            --r: 8px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* ── Screens ── */
+        .screen {
+            display: none;
+            min-height: 100vh;
+        }
+        .screen.active {
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ══════════════ SPLASH ══════════════ */
+        #splash {
+            align-items: center;
+            justify-content: center;
+            background: radial-gradient(ellipse at 50% 0%, #1a2a5e 0%, #0d0f1a 60%);
+            position: relative;
+            overflow: hidden;
+        }
+        #splash::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%233d82f6' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        }
+        .splash-content {
+            text-align: center;
+            z-index: 1;
+            padding: 40px 20px;
+        }
+        .splash-logo {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: clamp(38px, 11vw, 72px);
+            font-weight: 700;
+            letter-spacing: 4px;
+            background: linear-gradient(135deg, var(--accent1), var(--accent2));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1;
+        }
+        .splash-sub {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            color: var(--accent2);
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            margin-top: 8px;
+        }
+        .splash-tagline {
+            margin-top: 24px;
+            font-size: 17px;
+            color: var(--muted);
+            max-width: 460px;
+            line-height: 1.6;
+        }
+        .splash-tagline strong {
+            color: var(--text);
+        }
+        .splash-badges {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin: 28px 0;
+            flex-wrap: wrap;
+        }
+        .track-pill {
+            padding: 6px 16px;
+            border-radius: 99px;
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 14px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            border: 1px solid;
+        }
+        .track-pill.eim {
+            color: var(--eim);
+            border-color: var(--eim);
+            background: rgba(245, 158, 11, .1);
+        }
+        .track-pill.ccs {
+            color: var(--ccs);
+            border-color: var(--ccs);
+            background: rgba(34, 211, 165, .1);
+        }
+        .track-pill.pcops {
+            color: var(--pcops);
+            border-color: var(--pcops);
+            background: rgba(168, 85, 247, .1);
+        }
+
+        /* ── Buttons ── */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 14px 32px;
+            border-radius: var(--r);
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 18px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            cursor: pointer;
+            border: none;
+            transition: all .2s;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent1), #6366f1);
+            color: #fff;
+            box-shadow: 0 4px 24px rgba(61, 130, 246, .3);
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 32px rgba(61, 130, 246, .45);
+        }
+        .btn-secondary {
+            background: var(--card);
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+        .btn-secondary:hover {
+            border-color: var(--accent1);
+        }
+        .btn-success {
+            background: var(--accent2);
+            color: #0d0f1a;
+        }
+        .btn:disabled {
+            opacity: .4;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        /* ══════════════ REGISTER ══════════════ */
+        #register {
+            align-items: center;
+            justify-content: center;
+            background: var(--bg);
+            padding: 20px;
+        }
+        .reg-box {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 40px 36px;
+            width: 100%;
+            max-width: 480px;
+        }
+        .reg-box h2 {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        .reg-box p {
+            color: var(--muted);
+            font-size: 14px;
+            margin-bottom: 28px;
+        }
+        .form-group {
+            margin-bottom: 18px;
+        }
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--muted);
+            margin-bottom: 6px;
+        }
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px 14px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--r);
+            color: var(--text);
+            font-size: 15px;
+            font-family: 'Inter', sans-serif;
+            transition: border-color .2s;
+        }
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--accent1);
+        }
+        .form-group select option {
+            background: var(--card);
+        }
+        .password-field {
+            position: relative;
+        }
+        .password-field input {
+            padding-right: 64px;
+        }
+        .password-toggle {
+            position: absolute;
+            top: 50%;
+            right: 10px;
+            transform: translateY(-50%);
+            padding: 4px 6px;
+            background: transparent;
+            border: none;
+            color: var(--accent1);
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .password-toggle:hover {
+            color: var(--accent2);
+        }
+        .password-toggle:focus-visible {
+            outline: 1px solid var(--accent1);
+            outline-offset: 2px;
+            border-radius: 3px;
+        }
+        .track-select-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+            margin-top: 8px;
+        }
+        @media(max-width:600px) {
+            .track-select-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+        .track-card {
+            padding: 14px 10px;
+            border-radius: var(--r);
+            border: 2px solid var(--border);
+            cursor: pointer;
+            text-align: center;
+            transition: all .2s;
+        }
+        .track-card:hover {
+            border-color: var(--muted);
+        }
+        .track-card.selected {
+            border-color: var(--accent1);
+            background: rgba(61, 130, 246, .08);
+        }
+        .track-card.eim.selected {
+            border-color: var(--eim);
+            background: rgba(245, 158, 11, .08);
+        }
+        .track-card.ccs.selected {
+            border-color: var(--ccs);
+            background: rgba(34, 211, 165, .08);
+        }
+        .track-card.pcops.selected {
+            border-color: var(--pcops);
+            background: rgba(168, 85, 247, .08);
+        }
+        .track-card .t-icon {
+            font-size: 28px;
+            margin-bottom: 6px;
+        }
+        .track-card .t-name {
+            font-size: 12px;
+            font-weight: 600;
+            font-family: 'Rajdhani', sans-serif;
+            letter-spacing: .5px;
+        }
+        .track-card .t-full {
+            font-size: 10px;
+            color: var(--muted);
+            margin-top: 2px;
+            line-height: 1.3;
+        }
+
+        /* ══════════════ MAIN HUD ══════════════ */
+        #main {
+            flex-direction: column;
+        }
+        .top-bar {
+            background: var(--panel);
+            border-bottom: 1px solid var(--border);
+            padding: 0 24px;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .top-bar-logo {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 24px;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent1), var(--accent2));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .player-bar {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        .xp-bar-wrap {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 2px;
+        }
+        .xp-label {
+            font-size: 11px;
+            color: var(--muted);
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .xp-track {
+            width: 140px;
+            height: 6px;
+            background: var(--border);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        .xp-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent3), #f97316);
+            border-radius: 3px;
+            transition: width .6s ease;
+        }
+        .level-badge {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent3), #f97316);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Rajdhani', sans-serif;
+            font-weight: 700;
+            line-height: 1;
+        }
+        .level-badge .lv-label {
+            font-size: 9px;
+            letter-spacing: 1px;
+        }
+        .level-badge .lv-num {
+            font-size: 18px;
+        }
+        .player-name-tag {
+            font-weight: 600;
+            font-size: 14px;
+        }
+        .player-track-tag {
+            font-size: 11px;
+            color: var(--muted);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .nav-tabs {
+            display: flex;
+            gap: 2px;
+            background: var(--panel);
+            border-bottom: 1px solid var(--border);
+            padding: 0 24px;
+            overflow-x: auto;
+        }
+        .nav-tab {
+            padding: 14px 20px;
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 15px;
+            font-weight: 600;
+            letter-spacing: .5px;
+            color: var(--muted);
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            white-space: nowrap;
+            transition: all .15s;
+        }
+        .nav-tab:hover {
+            color: var(--text);
+        }
+        .nav-tab.active {
+            color: var(--accent1);
+            border-bottom-color: var(--accent1);
+        }
+
+        @media (max-width: 600px) {
+            .top-bar {
+                padding: 0 14px;
+                height: 56px;
+            }
+            .top-bar-logo {
+                font-size: 18px;
+            }
+            .player-bar {
+                gap: 10px;
+            }
+            .xp-track {
+                width: 80px;
+            }
+            .player-name-tag,
+            .player-track-tag {
+                display: none;
+            }
+            .nav-tabs {
+                padding: 0 10px;
+                mask-image: linear-gradient(to right, black calc(100% - 28px), transparent 100%);
+                -webkit-mask-image: linear-gradient(to right, black calc(100% - 28px), transparent 100%);
+            }
+            .nav-tab {
+                padding: 12px 12px;
+                font-size: 13px;
+            }
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 28px 24px;
+            max-width: 1100px;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        /* ══════════════ DASHBOARD ══════════════ */
+        .dash-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+        .stat-card {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: var(--r);
+            padding: 20px;
+        }
+        .stat-card .stat-label {
+            font-size: 12px;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+        .stat-card .stat-value {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 36px;
+            font-weight: 700;
+            line-height: 1;
+        }
+        .stat-card .stat-sub {
+            font-size: 12px;
+            color: var(--muted);
+            margin-top: 4px;
+        }
+
+        .section-title {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .section-title::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border);
+        }
+
+        .competency-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+        .comp-card {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: var(--r);
+            padding: 20px;
+            cursor: pointer;
+            transition: all .2s;
+            position: relative;
+            overflow: hidden;
+        }
+        .comp-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 3px;
+            height: 100%;
+        }
+        .comp-card.eim::before {
+            background: var(--eim);
+        }
+        .comp-card.ccs::before {
+            background: var(--ccs);
+        }
+        .comp-card.pcops::before {
+            background: var(--pcops);
+        }
+        .comp-card:hover {
+            border-color: var(--accent1);
+            transform: translateY(-2px);
+        }
+        .comp-card.locked {
+            opacity: .5;
+            cursor: not-allowed;
+        }
+        .comp-card.locked:hover {
+            transform: none;
+            border-color: var(--border);
+        }
+        .comp-card.completed {
+            border-color: var(--accent2);
+        }
+        .comp-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        .comp-icon {
+            font-size: 32px;
+        }
+        .comp-status {
+            font-size: 11px;
+            padding: 3px 10px;
+            border-radius: 99px;
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 600;
+        }
+        .comp-status.competent {
+            background: rgba(34, 211, 165, .15);
+            color: var(--accent2);
+        }
+        .comp-status.in-progress {
+            background: rgba(61, 130, 246, .15);
+            color: var(--accent1);
+        }
+        .comp-status.locked-s {
+            background: var(--border);
+            color: var(--muted);
+        }
+        .comp-status.nyc {
+            background: rgba(239, 68, 68, .15);
+            color: var(--accent4);
+        }
+        .comp-name {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 17px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        .comp-desc {
+            font-size: 12px;
+            color: var(--muted);
+            line-height: 1.5;
+            margin-bottom: 12px;
+        }
+        .comp-progress-bar {
+            height: 4px;
+            background: var(--border);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+        .comp-progress-fill {
+            height: 100%;
+            border-radius: 2px;
+            transition: width .4s;
+        }
+        .comp-card.eim .comp-progress-fill {
+            background: var(--eim);
+        }
+        .comp-card.ccs .comp-progress-fill {
+            background: var(--ccs);
+        }
+        .comp-card.pcops .comp-progress-fill {
+            background: var(--pcops);
+        }
+        .comp-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            color: var(--muted);
+            margin-top: 6px;
+        }
+
+        /* ══════════════ QUIZ / GAME ══════════════ */
+        #quiz-screen {
+            background: var(--bg);
+            padding: 0;
+        }
+        .quiz-top {
+            background: var(--panel);
+            border-bottom: 1px solid var(--border);
+            padding: 16px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+        .quiz-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .quiz-comp-name {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 18px;
+            font-weight: 700;
+        }
+        .quiz-track-badge {
+            font-size: 11px;
+            padding: 3px 10px;
+            border-radius: 99px;
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 600;
+        }
+        .timer-ring {
+            position: relative;
+            width: 52px;
+            height: 52px;
+        }
+        .timer-ring svg {
+            transform: rotate(-90deg);
+        }
+        .timer-ring .timer-bg {
+            fill: none;
+            stroke: var(--border);
+            stroke-width: 4;
+        }
+        .timer-ring .timer-arc {
+            fill: none;
+            stroke: var(--accent2);
+            stroke-width: 4;
+            stroke-linecap: round;
+            transition: stroke-dashoffset .9s linear, stroke .3s;
+        }
+        .timer-text {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .quiz-progress-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: var(--muted);
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .q-dots {
+            display: flex;
+            gap: 4px;
+        }
+        .q-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--border);
+            transition: background .2s;
+        }
+        .q-dot.done {
+            background: var(--accent2);
+        }
+        .q-dot.current {
+            background: var(--accent1);
+        }
+        .q-dot.wrong {
+            background: var(--accent4);
+        }
+
+        .quiz-body {
+            flex: 1;
+            padding: 32px 24px;
+            max-width: 820px;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        /* ══════════════ GAME MODULE ══════════════ */
+        .game-module-frame-wrap {
+            flex: 1;
+            width: 100%;
+            max-width: 620px;
+            margin: 0 auto;
+            padding: 16px;
+            display: flex;
+        }
+        .game-module-iframe {
+            width: 100%;
+            flex: 1;
+            min-height: 640px;
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            background: #080b12;
+            -webkit-overflow-scrolling: touch;
+        }
+        @media (max-width: 640px) {
+            .game-module-frame-wrap {
+                padding: 8px;
+                max-width: 100%;
+            }
+            .game-module-iframe {
+                min-height: calc(100vh - 150px);
+                border-radius: 10px;
+            }
+        }
+
+        .scenario-box {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            border-left: 4px solid var(--accent1);
+        }
+        .scenario-label {
+            font-size: 11px;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--accent1);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+        .scenario-text {
+            font-size: 16px;
+            line-height: 1.7;
+            color: var(--text);
+        }
+
+        .question-text {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 22px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            line-height: 1.4;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+        @media(max-width:600px) {
+            .options-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .option-btn {
+            padding: 16px 18px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--r);
+            cursor: pointer;
+            text-align: left;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            transition: all .15s;
+            font-size: 14px;
+            color: var(--text);
+            line-height: 1.5;
+        }
+        .option-btn:hover:not(:disabled) {
+            border-color: var(--accent1);
+            background: rgba(61, 130, 246, .06);
+        }
+        .option-btn .opt-letter {
+            min-width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 13px;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+        .option-btn.selected {
+            border-color: var(--accent1);
+            background: rgba(61, 130, 246, .1);
+        }
+        .option-btn.selected .opt-letter {
+            background: var(--accent1);
+            color: #fff;
+        }
+        .option-btn.correct {
+            border-color: var(--accent2);
+            background: rgba(34, 211, 165, .1);
+        }
+        .option-btn.correct .opt-letter {
+            background: var(--accent2);
+            color: #0d0f1a;
+        }
+        .option-btn.wrong {
+            border-color: var(--accent4);
+            background: rgba(239, 68, 68, .1);
+        }
+        .option-btn.wrong .opt-letter {
+            background: var(--accent4);
+            color: #fff;
+        }
+        .option-btn:disabled {
+            cursor: default;
+        }
+
+        .feedback-box {
+            background: var(--panel);
+            border-radius: var(--r);
+            padding: 16px 20px;
+            margin-bottom: 20px;
+            display: none;
+            gap: 12px;
+            align-items: flex-start;
+        }
+        .feedback-box.show {
+            display: flex;
+        }
+        .feedback-box.correct-fb {
+            border: 1px solid var(--accent2);
+        }
+        .feedback-box.wrong-fb {
+            border: 1px solid var(--accent4);
+        }
+        .fb-icon {
+            font-size: 22px;
+            flex-shrink: 0;
+        }
+        .fb-text {
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        .fb-text strong {
+            display: block;
+            margin-bottom: 2px;
+        }
+
+        .quiz-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+
+        /* xp popup */
+        .xp-popup {
+            position: fixed;
+            top: 80px;
+            right: 24px;
+            background: var(--accent3);
+            color: #0d0f1a;
+            padding: 8px 18px;
+            border-radius: 99px;
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 18px;
+            font-weight: 700;
+            z-index: 999;
+            animation: popUp .6s ease forwards;
+            pointer-events: none;
+        }
+        @keyframes popUp {
+            0% {
+                opacity: 0;
+                transform: translateY(10px) scale(.8);
+            }
+            30% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+            70% {
+                opacity: 1;
+                transform: translateY(-10px);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+        }
+
+        /* ══════════════ RESULTS ══════════════ */
+        .results-body {
+            padding: 40px 24px;
+            max-width: 640px;
+            margin: 0 auto;
+            width: 100%;
+        }
+        .results-header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+        .results-icon {
+            font-size: 72px;
+            margin-bottom: 12px;
+        }
+        .results-title {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 36px;
+            font-weight: 700;
+        }
+        .results-rating {
+            font-size: 14px;
+            padding: 4px 16px;
+            border-radius: 99px;
+            display: inline-block;
+            margin-top: 8px;
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 600;
+        }
+        .rating-c {
+            background: rgba(34, 211, 165, .15);
+            color: var(--accent2);
+            border: 1px solid var(--accent2);
+        }
+        .rating-nyc {
+            background: rgba(239, 68, 68, .15);
+            color: var(--accent4);
+            border: 1px solid var(--accent4);
+        }
+
+        .results-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 28px;
+        }
+        .r-stat {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: var(--r);
+            padding: 16px;
+            text-align: center;
+        }
+        .r-stat .r-val {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 30px;
+            font-weight: 700;
+        }
+        .r-stat .r-lbl {
+            font-size: 11px;
+            color: var(--muted);
+            margin-top: 2px;
+        }
+
+        .review-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 28px;
+        }
+        .review-item {
+            background: var(--panel);
+            border-radius: var(--r);
+            padding: 14px 16px;
+            font-size: 13px;
+            border-left: 3px solid var(--border);
+        }
+        .review-item.correct-r {
+            border-left-color: var(--accent2);
+        }
+        .review-item.wrong-r {
+            border-left-color: var(--accent4);
+        }
+        .review-q {
+            font-weight: 600;
+            margin-bottom: 4px;
+            color: var(--text);
+        }
+        .review-a {
+            color: var(--muted);
+        }
+        .review-a span {
+            font-weight: 500;
+        }
+        .review-a span.correct-ans {
+            color: var(--accent2);
+        }
+        .review-a span.wrong-ans {
+            color: var(--accent4);
+        }
+
+        /* ══════════════ LEADERBOARD ══════════════ */
+        .leaderboard-table {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: var(--r);
+            overflow: hidden;
+        }
+        .lb-row {
+            display: grid;
+            grid-template-columns: 48px 1fr auto auto;
+            align-items: center;
+            padding: 14px 20px;
+            border-bottom: 1px solid var(--border);
+            gap: 12px;
+            transition: background .15s;
+        }
+        .lb-row:last-child {
+            border-bottom: none;
+        }
+        .lb-row:hover {
+            background: var(--card);
+        }
+        .lb-row.me {
+            background: rgba(61, 130, 246, .08);
+            border-left: 3px solid var(--accent1);
+        }
+        .lb-rank {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 22px;
+            font-weight: 700;
+            text-align: center;
+            color: var(--muted);
+        }
+        .lb-rank.gold {
+            color: #ffd700;
+        }
+        .lb-rank.silver {
+            color: #c0c0c0;
+        }
+        .lb-rank.bronze {
+            color: #cd7f32;
+        }
+        .lb-player {
+            display: flex;
+            flex-direction: column;
+        }
+        .lb-name {
+            font-weight: 600;
+            font-size: 15px;
+        }
+        .lb-track-tag {
+            font-size: 11px;
+            color: var(--muted);
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .lb-level {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            color: var(--accent3);
+            font-weight: 600;
+        }
+        .lb-xp {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--accent3);
+        }
+
+        /* ══════════════ BADGES ══════════════ */
+        .badges-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 16px;
+        }
+        .badge-card {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: var(--r);
+            padding: 20px 16px;
+            text-align: center;
+            transition: all .2s;
+        }
+        .badge-card.earned {
+            border-color: var(--accent3);
+        }
+        .badge-card.earned:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(245, 158, 11, .15);
+        }
+        .badge-card.locked-b {
+            opacity: .4;
+        }
+        .badge-icon {
+            font-size: 40px;
+            margin-bottom: 10px;
+        }
+        .badge-name {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 15px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        .badge-desc {
+            font-size: 11px;
+            color: var(--muted);
+            line-height: 1.4;
+        }
+        .badge-earned-tag {
+            font-size: 10px;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--accent3);
+            margin-top: 6px;
+        }
+
+        /* ══════════════ ANALYTICS ══════════════ */
+        .analytics-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        @media(max-width:700px) {
+            .analytics-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        .analytics-card {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: var(--r);
+            padding: 20px;
+        }
+        .analytics-card h3 {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .competency-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+            font-size: 13px;
+        }
+        .comp-row-name {
+            width: 160px;
+            flex-shrink: 0;
+            color: var(--text);
+            font-weight: 500;
+        }
+        .comp-row-bar {
+            flex: 1;
+            height: 8px;
+            background: var(--border);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .comp-row-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width .5s;
+        }
+        .comp-row-pct {
+            width: 36px;
+            text-align: right;
+            color: var(--muted);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+        }
+
+        .history-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .history-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            background: var(--card);
+            border-radius: 6px;
+            font-size: 13px;
+        }
+        .hist-icon {
+            font-size: 18px;
+        }
+        .hist-name {
+            flex: 1;
+        }
+        .hist-score {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            color: var(--muted);
+        }
+        .hist-rating {
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 99px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, .7);
+            z-index: 200;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .modal-overlay.open {
+            display: flex;
+        }
+        .modal {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 36px;
+            max-width: 480px;
+            width: 100%;
+            text-align: center;
+            position: relative;
+        }
+        .modal-icon {
+            font-size: 64px;
+            margin-bottom: 12px;
+        }
+        .modal h2 {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        .modal p {
+            color: var(--muted);
+            font-size: 14px;
+            margin-bottom: 24px;
+            line-height: 1.6;
+        }
+        .modal-close {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: var(--card);
+            border: none;
+            color: var(--muted);
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%) translateY(80px);
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 99px;
+            padding: 12px 24px;
+            font-size: 14px;
+            font-weight: 500;
+            z-index: 999;
+            transition: transform .3s;
+            white-space: nowrap;
+        }
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+        }
+
+        /* ── track filter tabs on leaderboard ── */
+        .lb-track-tabs {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 18px;
+            flex-wrap: wrap;
+        }
+        .lb-track-tabs .btn {
+            padding: 8px 18px;
+            font-size: 13px;
+            font-family: 'Inter', sans-serif;
+            font-weight: 500;
+            letter-spacing: 0;
+        }
+        .lb-track-tabs .btn.active-track {
+            background: var(--accent1);
+            color: #fff;
+            border-color: var(--accent1);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ══════ SPLASH ══════ -->
+    <div id="splash" class="screen active">
+        <div class="splash-content">
+            <div class="splash-logo">SKILLQUEST</div>
+            <div class="splash-sub">TESDA · Gamified Assessment Platform</div>
+            <p class="splash-tagline">
+                Prepare for your <strong>National Certification</strong> through interactive,
+                scenario-based challenges — earn XP, level up, and prove your competency
+                before the real thing.
+            </p>
+            <div class="splash-badges">
+                <span class="track-pill eim">⚡ EIM NC II</span>
+                <span class="track-pill ccs">🎧 CCS NC II</span>
+                <span class="track-pill pcops">💻 PC OPS NC II</span>
+            </div>
+            <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+                <button class="btn btn-success" id="continue-btn" style="display:none;" onclick="resumeSession()">↻ Continue Session</button>
+                <button class="btn btn-primary" onclick="showScreen('register')">▶ Create Account</button>
+                <button class="btn btn-secondary" onclick="showScreen('login')">🔑 Log In</button>
+                <button class="btn btn-secondary" onclick="loadDemo()">⚡ Quick Demo (offline)</button>
+            </div>
+            <p id="api-status" style="margin-top:14px;font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace;"></p>
+            <p style="margin-top:20px;font-size:12px;color:var(--muted);">
+                City College of Calamba · Dept. of Computing and Informatics
+            </p>
+        </div>
+    </div>
+
+    <!-- ══════ REGISTER ══════ -->
+    <div id="register" class="screen">
+        <div class="reg-box" style="margin:auto;">
+            <h2>Create Your Account</h2>
+            <p>Set up your account to begin the gamified assessment.</p>
+
+            <div class="form-group">
+                <label>I am a...</label>
+                <div class="track-select-grid" style="grid-template-columns:1fr 1fr;">
+                    <div class="track-card ccs selected" data-role="trainee" onclick="selectRole('trainee',this)">
+                        <div class="t-icon">🎓</div>
+                        <div class="t-name">TRAINEE</div>
+                        <div class="t-full">Take assessments, earn XP</div>
+                    </div>
+                    <div class="track-card eim" data-role="trainer" onclick="selectRole('trainer',this)">
+                        <div class="t-icon">🧑‍🏫</div>
+                        <div class="t-name">TRAINER</div>
+                        <div class="t-full">Monitor trainee results</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Username</label>
+                <input type="text" id="reg-username" placeholder="e.g. juandelacruz" autocomplete="username" />
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <div class="password-field">
+                    <input type="password" id="reg-password" placeholder="At least 6 characters" autocomplete="new-password" />
+                    <button type="button" class="password-toggle" onclick="togglePasswordVisibility('reg-password', this)" aria-label="Show password" aria-pressed="false">Show</button>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Full Name</label>
+                <input type="text" id="reg-name" placeholder="e.g. Juan dela Cruz" />
+            </div>
+            <div class="form-group">
+                <label>Student / Employee ID (optional)</label>
+                <input type="text" id="reg-id" placeholder="e.g. 2024-00123" />
+            </div>
+            <div class="form-group" id="reg-track-group">
+                <label>Select Your NC Track</label>
+                <div class="track-select-grid">
+                    <div class="track-card eim" data-track="eim" onclick="selectTrack('eim',this)">
+                        <div class="t-icon">⚡</div>
+                        <div class="t-name">EIM NC II</div>
+                        <div class="t-full">Electrical Installation & Maintenance</div>
+                    </div>
+                    <div class="track-card ccs" data-track="ccs" onclick="selectTrack('ccs',this)">
+                        <div class="t-icon">🎧</div>
+                        <div class="t-name">CCS NC II</div>
+                        <div class="t-full">Contact Center Services</div>
+                    </div>
+                    <div class="track-card pcops" data-track="pcops" onclick="selectTrack('pcops',this)">
+                        <div class="t-icon">💻</div>
+                        <div class="t-name">PC OPS NC II</div>
+                        <div class="t-full">PC Operations & Maintenance</div>
+                    </div>
+                </div>
+            </div>
+            <p id="reg-error" style="color:var(--accent4);font-size:13px;margin-bottom:10px;display:none;"></p>
+            <div style="display:flex;gap:10px;margin-top:8px;">
+                <button class="btn btn-secondary" onclick="showScreen('splash')" style="flex:1">← Back</button>
+                <button class="btn btn-primary" id="reg-submit-btn" onclick="registerAccount()" style="flex:2">Create Account →</button>
+            </div>
+            <p style="margin-top:16px;font-size:13px;color:var(--muted);text-align:center;">
+                Already have an account? <a href="#" onclick="showScreen('login');return false;" style="color:var(--accent1);">Log in</a>
+            </p>
+        </div>
+    </div>
+
+    <!-- ══════ LOGIN ══════ -->
+    <div id="login" class="screen">
+        <div class="reg-box" style="margin:auto;">
+            <h2>Log In</h2>
+            <p>Welcome back — pick up right where you left off.</p>
+            <div class="form-group">
+                <label>Username</label>
+                <input type="text" id="login-username" placeholder="Your username" autocomplete="username" />
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <div class="password-field">
+                    <input type="password" id="login-password" placeholder="Your password" autocomplete="current-password" />
+                    <button type="button" class="password-toggle" onclick="togglePasswordVisibility('login-password', this)" aria-label="Show password" aria-pressed="false">Show</button>
+                </div>
+            </div>
+            <p id="login-error" style="color:var(--accent4);font-size:13px;margin-bottom:10px;display:none;"></p>
+            <div style="display:flex;gap:10px;margin-top:8px;">
+                <button class="btn btn-secondary" onclick="showScreen('splash')" style="flex:1">← Back</button>
+                <button class="btn btn-primary" id="login-submit-btn" onclick="loginAccount()" style="flex:2">Log In →</button>
+            </div>
+            <p style="margin-top:16px;font-size:13px;color:var(--muted);text-align:center;">
+                No account yet? <a href="#" onclick="showScreen('register');return false;" style="color:var(--accent1);">Create one</a>
+            </p>
+        </div>
+    </div>
+
+    <!-- ══════ MAIN ══════ -->
+    <div id="main" class="screen">
+        <div class="top-bar">
+            <div class="top-bar-logo">SKILLQUEST</div>
+            <div class="player-bar">
+                <div class="xp-bar-wrap">
+                    <div class="xp-label"><span id="hud-xp">0</span> XP · Next: <span id="hud-next">100</span></div>
+                    <div class="xp-track"><div class="xp-fill" id="hud-xp-bar" style="width:0%"></div></div>
+                </div>
+                <div style="display:flex;flex-direction:column;align-items:flex-end;">
+                    <div class="player-name-tag" id="hud-name">Trainee</div>
+                    <div class="player-track-tag" id="hud-track">PC OPS NC II</div>
+                </div>
+                <div class="level-badge">
+                    <span class="lv-label">LVL</span>
+                    <span class="lv-num" id="hud-level">1</span>
+                </div>
+                <button class="btn btn-secondary" style="padding:8px 14px;font-size:13px;" onclick="logout()" title="Log out (progress is saved to your account)">⎋ Log Out</button>
+            </div>
+        </div>
+        <div class="nav-tabs">
+            <div class="nav-tab active" onclick="switchTab('dashboard',this)">🏠 Dashboard</div>
+            <div class="nav-tab" onclick="switchTab('modules',this)">📋 Modules</div>
+            <div class="nav-tab" onclick="switchTab('analytics',this)">📊 Analytics</div>
+            <div class="nav-tab" onclick="switchTab('badges',this)">🏅 Badges</div>
+            <div class="nav-tab" onclick="switchTab('leaderboard',this)">🏆 Leaderboard</div>
+        </div>
+        <div class="main-content" id="main-content"></div>
+    </div>
+
+    <!-- ══════ TRAINER DASHBOARD ══════ -->
+    <div id="trainer-main" class="screen">
+        <div class="top-bar">
+            <div class="top-bar-logo">SKILLQUEST</div>
+            <div class="player-bar">
+                <div style="display:flex;flex-direction:column;align-items:flex-end;">
+                    <div class="player-name-tag" id="trainer-hud-name">Trainer</div>
+                    <div class="player-track-tag">Trainer View</div>
+                </div>
+                <button class="btn btn-secondary" style="padding:8px 14px;font-size:13px;" onclick="logout()">⎋ Log Out</button>
+            </div>
+        </div>
+        <div class="main-content" id="trainer-content" style="padding:24px;"></div>
+    </div>
+
+    <!-- ══════ QUIZ SCREEN ══════ -->
+    <div id="quiz-screen" class="screen">
+        <div class="quiz-top">
+            <div class="quiz-info">
+                <button class="btn btn-secondary" style="padding:8px 14px;font-size:13px;" onclick="exitQuiz()">✕ Exit</button>
+                <div>
+                    <div class="quiz-comp-name" id="q-comp-name">Module Name</div>
+                    <div id="q-track-badge" class="quiz-track-badge"></div>
+                </div>
+            </div>
+            <div class="quiz-progress-row">
+                <div class="q-dots" id="q-dots"></div>
+                <span id="q-counter" style="margin-left:4px;"></span>
+            </div>
+            <div class="timer-ring">
+                <svg width="52" height="52" viewBox="0 0 52 52">
+                    <circle class="timer-bg" cx="26" cy="26" r="22"/>
+                    <circle class="timer-arc" id="timer-arc" cx="26" cy="26" r="22"
+                    stroke-dasharray="138.2" stroke-dashoffset="0"/>
+                </svg>
+                <div class="timer-text" id="timer-text">30</div>
+            </div>
+        </div>
+        <div class="quiz-body" id="quiz-body"></div>
+    </div>
+
+    <!-- ══════ GAME MODULE SCREEN ══════ -->
+    <div id="game-module-screen" class="screen">
+        <div class="quiz-top">
+            <div class="quiz-info">
+                <button class="btn btn-secondary" style="padding:8px 14px;font-size:13px;" onclick="exitGameModule()">✕ Exit</button>
+                <div>
+                    <div class="quiz-comp-name" id="gm-comp-name">Module Name</div>
+                    <div id="gm-track-badge" class="quiz-track-badge"></div>
+                </div>
+            </div>
+            <div class="quiz-progress-row">
+                <span id="gm-progress-text" style="font-size:12px;color:var(--muted);">Level progress will appear here as you play</span>
+            </div>
+        </div>
+        <div class="game-module-frame-wrap">
+            <iframe id="gm-iframe" class="game-module-iframe" title="Interactive module" scrolling="yes"
+            allow="fullscreen"></iframe>
+        </div>
+    </div>
+
+    <!-- ══════ RESULTS SCREEN ══════ -->
+    <div id="results-screen" class="screen">
+        <div class="top-bar">
+            <div class="top-bar-logo">SKILLQUEST</div>
+            <button class="btn btn-secondary" style="padding:8px 18px;" onclick="showMain()">← Back to Dashboard</button>
+        </div>
+        <div class="results-body" id="results-body"></div>
+    </div>
+
+    <!-- Level Up Modal -->
+    <div class="modal-overlay" id="levelup-modal">
+        <div class="modal">
+            <button class="modal-close" onclick="closeModal('levelup-modal')">✕</button>
+            <div class="modal-icon">🎉</div>
+            <h2>LEVEL UP!</h2>
+            <p id="levelup-msg">You reached Level 2! Keep going — the higher the level, the closer you are to NC readiness.</p>
+            <button class="btn btn-primary" style="width:100%;" onclick="closeModal('levelup-modal')">Continue ▶</button>
+        </div>
+    </div>
+
+    <!-- Badge Modal -->
+    <div class="modal-overlay" id="badge-modal">
+        <div class="modal">
+            <button class="modal-close" onclick="closeModal('badge-modal')">✕</button>
+            <div class="modal-icon" id="badge-modal-icon">🏅</div>
+            <h2>Badge Earned!</h2>
+            <p id="badge-modal-msg">You earned the First Steps badge!</p>
+            <button class="btn btn-primary" style="width:100%;" onclick="closeModal('badge-modal')">Collect 🎖</button>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        // ══════════════════════════════════════════
+        // DATA LAYER
+        // ══════════════════════════════════════════
+
+        const TRACKS = {
+            eim: { label: 'EIM NC II', full: 'Electrical Installation & Maintenance', color: '#f59e0b', icon: '⚡' },
+            ccs: { label: 'CCS NC II', full: 'Contact Center Services', color: '#22d3a5', icon: '🎧' },
+            pcops: { label: 'PC OPS NC II', full: 'PC Operations & Maintenance', color: '#a855f7', icon: '💻' },
+        };
+
+        // ─── Helper to create PC OPS quiz questions ──────────────
+        function makePCopsQuestions() {
+            return [
+                // Module 1: OHS & Ergonomics
+                {
+                    scenario: 'You are setting up a new computer workstation.',
+                    q: 'What is the correct posture for using a computer?',
+                    opts: ['Feet flat on floor, screen at eye level', 'Slouching in the chair', 'Screen below desk level',
+                        'Feet crossed on chair'
+                    ],
+                    ans: 0,
+                    xp: 10,
+                    feedback: 'Proper ergonomics prevents strain and injury. Keep your feet flat and screen at eye level.'
+                }, {
+                    scenario: 'You notice a frayed power cord in the office.',
+                    q: 'What is the safest course of action?',
+                    opts: ['Report it to IT and unplug it immediately', 'Ignore it if it still works',
+                        'Wrap it with electrical tape', 'Continue using it carefully'
+                    ],
+                    ans: 0,
+                    xp: 10,
+                    feedback: 'Frayed cords are a fire and shock hazard. Always report and unplug them immediately.'
+                },
+                // Module 2: OS & File Management
+                {
+                    scenario: 'You are organizing a project folder on your PC.',
+                    q: 'Which file extension indicates an image file?',
+                    opts: ['.docx', '.jpg', '.exe', '.pdf'],
+                    ans: 1,
+                    xp: 10,
+                    feedback: '.jpg is a common image file extension used for photos and graphics.'
+                }, {
+                    scenario: 'You need to find a specific file you saved yesterday.',
+                    q: 'What is the most efficient way to find it?',
+                    opts: ['Search by file name in File Explorer', 'Browse every folder manually',
+                        'Check the Recycle Bin', 'Restart the computer'
+                    ],
+                    ans: 0,
+                    xp: 10,
+                    feedback: 'Using the search bar in File Explorer is the quickest way to locate a specific file.'
+                },
+                // Module 3: Typing & Shortcuts
+                {
+                    scenario: 'You are typing a long report in a word processor.',
+                    q: 'What shortcut is used to save the file?',
+                    opts: ['Ctrl+S', 'Ctrl+C', 'Ctrl+V', 'Ctrl+Z'],
+                    ans: 0,
+                    xp: 10,
+                    feedback: 'Ctrl+S (or Cmd+S on Mac) is the universal shortcut to save the current file.'
+                }, {
+                    scenario: 'You need to quickly copy and paste text.',
+                    q: 'What is the correct shortcut sequence?',
+                    opts: ['Ctrl+C then Ctrl+V', 'Ctrl+V then Ctrl+C', 'Ctrl+X then Ctrl+V', 'Ctrl+Z then Ctrl+Y'],
+                    ans: 0,
+                    xp: 10,
+                    feedback: 'Copy (Ctrl+C) then Paste (Ctrl+V) is the standard shortcut sequence.'
+                },
+                // Module 4: Spreadsheet Ops
+                {
+                    scenario: 'You are creating a budget in a spreadsheet.',
+                    q: 'Which formula correctly adds up a column of numbers?',
+                    opts: ['=SUM(A1:A10)', '=TOTAL(A1:A10)', '=ADD(A1:A10)', '=COUNT(A1:A10)'],
+                    ans: 0,
+                    xp: 10,
+                    feedback: '=SUM is the standard function for adding a range of cells in most spreadsheet software.'
+                }, {
+                    scenario: 'You want to freeze the header row so it stays visible while scrolling.',
+                    q: 'Where is the "Freeze Panes" option found?',
+                    opts: ['View tab', 'Home tab', 'Insert tab', 'Formulas tab'],
+                    ans: 0,
+                    xp: 10,
+                    feedback: 'The "Freeze Panes" option is typically located in the View tab of the ribbon.'
+                },
+                // Module 5: System Maintenance
+                {
+                    scenario: 'Your computer is running unusually slow.',
+                    q: 'What is a good first step to improve performance?',
+                    opts: ['Run Disk Cleanup', 'Reboot the router', 'Reinstall Windows', 'Update the printer driver'],
+                    ans: 0,
+                    xp: 10,
+                    feedback: 'Disk Cleanup removes temporary files and system caches that can slow down your PC.'
+                }, {
+                    scenario: 'You are installing a new hardware device.',
+                    q: 'What should you do after physically connecting the device?',
+                    opts: ['Install the necessary drivers', 'Format the hard drive', 'Delete system files',
+                        'Change the BIOS settings'
+                    ],
+                    ans: 0,
+                    xp: 10,
+                    feedback: 'Installing the correct drivers ensures the hardware communicates properly with the operating system.'
+                }
+            ];
+        }
+
+        // ─── CCS modules (quizzes) ──────────────────────────────
+        function makeCCSQuestions() {
+            return [{
+                scenario: 'You are handling a customer call about a billing issue.',
+                q: 'What is the first step in the call flow?',
+                opts: ['Greet and verify identity', 'Immediately escalate to supervisor', 'Provide the solution',
+                    'Put the customer on hold'
+                ],
+                ans: 0,
+                xp: 10,
+                feedback: 'Always start by greeting the customer and verifying their identity to ensure security and professionalism.'
+            }, {
+                scenario: 'A customer is very upset about a service outage.',
+                q: 'Which de-escalation technique is most effective?',
+                opts: ['Apologize and empathize', 'Argue with the customer', 'Promise a quick fix', 'Transfer the call'],
+                ans: 0,
+                xp: 10,
+                feedback: 'Empathy and apology help calm the customer and build trust, even if you cannot solve the issue immediately.'
+            }, {
+                scenario: 'You need to log a support ticket in the CRM.',
+                q: 'What information is critical to include?',
+                opts: ['Customer name and issue details', 'Only the customer name', 'Your employee ID',
+                    'The date and time'
+                ],
+                ans: 0,
+                xp: 10,
+                feedback: 'Always capture the customer\'s name and a clear description of the issue for proper ticket tracking.'
+            }, {
+                scenario: 'You are reviewing a call for quality assurance.',
+                q: 'Which metric indicates high quality service?',
+                opts: ['First call resolution', 'Long call duration', 'Multiple transfers', 'Customer complained'],
+                ans: 0,
+                xp: 10,
+                feedback: 'First call resolution (FCR) is a key quality indicator that shows efficiency and customer satisfaction.'
+            }, {
+                scenario: 'You are about to start a live call simulation.',
+                q: 'How should you prepare?',
+                opts: ['Review the customer\'s history', 'Mute your microphone', 'Open multiple tabs',
+                    'Start typing immediately'
+                ],
+                ans: 0,
+                xp: 10,
+                feedback: 'Reviewing the customer\'s history helps you provide personalized and efficient service during the call.'
+            }];
+        }
+
+        // ─── COMPETENCY MODULES ──────────────────────────────────
+        // Each module now maps to one of the three game files
+        const COMPETENCY_MODULES = {
+            eim: [{
+                id: 'eim_safety',
+                name: 'Electrical Safety & PPE',
+                icon: '🦺',
+                desc: 'Identify hazards, apply lockout/tagout, and select the correct PPE for electrical work.',
+                type: 'game',
+                gameFile: 'eim-game.html',
+                gameMode: 'code',
+                totalLevels: 5,
+                moduleId: 'eim_safety'
+            }, {
+                id: 'eim_circuit',
+                name: 'Circuit Installation',
+                icon: '🔌',
+                desc: 'Wire series, parallel and combination circuits correctly to light the lamp.',
+                type: 'game',
+                gameFile: 'eim-game.html',
+                gameMode: 'wire',
+                totalLevels: 5,
+                moduleId: 'eim_circuit'
+            }, {
+                id: 'eim_symbols',
+                name: 'Electrical Symbols',
+                icon: '🔍',
+                desc: 'Recognize standard schematic symbols used in circuit diagrams.',
+                type: 'game',
+                gameFile: 'eim-game.html',
+                gameMode: 'symbol',
+                totalLevels: 5,
+                moduleId: 'eim_symbols'
+            }, {
+                id: 'eim_troubleshoot',
+                name: 'Circuit Troubleshooting',
+                icon: '🛠️',
+                desc: 'Inspect broken circuits, diagnose the fault, and apply the correct repair.',
+                type: 'game',
+                gameFile: 'eim-game.html',
+                gameMode: 'fault',
+                totalLevels: 5,
+                moduleId: 'eim_troubleshoot'
+            }],
+            ccs: [{
+                id: 'ccs_script',
+                name: 'Script Savvy',
+                icon: '📋',
+                desc: 'Master call flow and standard phrases.',
+                type: 'game',
+                gameFile: 'ccs-game.html',
+                gameMode: 'script',
+                totalLevels: 5,
+                moduleId: 'ccs_script'
+            }, {
+                id: 'ccs_storm',
+                name: 'Calm the Storm',
+                icon: '🌊',
+                desc: 'De-escalation and empathy skills.',
+                type: 'game',
+                gameFile: 'ccs-game.html',
+                gameMode: 'storm',
+                totalLevels: 5,
+                moduleId: 'ccs_storm'
+            }, {
+                id: 'ccs_speed',
+                name: 'System Speed',
+                icon: '⚡',
+                desc: 'CRM data entry and tickets.',
+                type: 'game',
+                gameFile: 'ccs-game.html',
+                gameMode: 'speed',
+                totalLevels: 5,
+                moduleId: 'ccs_speed'
+            }, {
+                id: 'ccs_quality',
+                name: 'Quality Quest',
+                icon: '⭐',
+                desc: 'QA, compliance and metrics.',
+                type: 'game',
+                gameFile: 'ccs-game.html',
+                gameMode: 'quality',
+                totalLevels: 5,
+                moduleId: 'ccs_quality'
+            }, {
+                id: 'ccs_live',
+                name: 'The Live Call',
+                icon: '🎙️',
+                desc: 'Full simulation assessment.',
+                type: 'game',
+                gameFile: 'ccs-game.html',
+                gameMode: 'live',
+                totalLevels: 5,
+                moduleId: 'ccs_live'
+            }],
+            pcops: [{
+                id: 'pc_ohs',
+                name: 'OHS & Ergonomics',
+                icon: '🛡️',
+                desc: 'Learn computer workstation safety and ergonomics.',
+                type: 'game',
+                gameFile: 'pc-ops-game.html',
+                gameMode: 'ohs',
+                totalLevels: 5,
+                moduleId: 'pc_ohs'
+            }, {
+                id: 'pc_os',
+                name: 'OS & File Management',
+                icon: '📁',
+                desc: 'Master file organization, extensions, and backup procedures.',
+                type: 'game',
+                gameFile: 'pc-ops-game.html',
+                gameMode: 'os',
+                totalLevels: 5,
+                moduleId: 'pc_os'
+            }, {
+                id: 'pc_typing',
+                name: 'Typing & Shortcuts',
+                icon: '⌨️',
+                desc: 'Boost productivity with keyboard shortcuts and text management.',
+                type: 'game',
+                gameFile: 'pc-ops-game.html',
+                gameMode: 'typing',
+                totalLevels: 5,
+                moduleId: 'pc_typing'
+            }, {
+                id: 'pc_spread',
+                name: 'Spreadsheet Ops',
+                icon: '📊',
+                desc: 'Build formulas, format data, and manage worksheets.',
+                type: 'game',
+                gameFile: 'pc-ops-game.html',
+                gameMode: 'spreadsheet',
+                totalLevels: 5,
+                moduleId: 'pc_spread'
+            }, {
+                id: 'pc_maint',
+                name: 'System Maintenance',
+                icon: '🔧',
+                desc: 'Troubleshoot hardware, update drivers, and clean up your system.',
+                type: 'game',
+                gameFile: 'pc-ops-game.html',
+                gameMode: 'maintenance',
+                totalLevels: 5,
+                moduleId: 'pc_maint'
+            }],
+        };
+
+        // ─── TRACK-SPECIFIC BADGES ──────────────────────────────────
+        const BADGES_DEF = {
+            // General badges (all tracks)
+            all: [
+                { id: 'first_blood', icon: '🩸', name: 'First Steps', desc: 'Complete your very first question correctly.',
+                    condition: (s) => s.totalCorrect >= 1 },
+                { id: 'sharpshooter', icon: '🎯', name: 'Sharpshooter', desc: 'Score 100% on any module.',
+                    condition: (s) => s.perfectModules >= 1 },
+                { id: 'persistent', icon: '💪', name: 'Persistent', desc: 'Complete 3 modules (any result).',
+                    condition: (s) => s.modulesCompleted >= 3 },
+                { id: 'speed_demon', icon: '⚡', name: 'Speed Demon', desc: 'Answer 10 questions within the time limit.',
+                    condition: (s) => s.timedCorrect >= 10 },
+                { id: 'nc_ready', icon: '🎓', name: 'NC Ready', desc: 'Pass every module in your track (≥70%).',
+                    condition: (s) => s.passedInTrack >= (COMPETENCY_MODULES[s.track]?.length || 3) },
+                { id: 'xp_100', icon: '🌟', name: 'Rising Star', desc: 'Earn 100 XP total.',
+                condition: (s) => s.xp >= 100 },
+                { id: 'xp_500', icon: '🔥', name: 'On Fire', desc: 'Earn 500 XP total.',
+                condition: (s) => s.xp >= 500 },
+                { id: 'level5', icon: '👑', name: 'Champion', desc: 'Reach Level 5.',
+                condition: (s) => s.level >= 5 },
+            ],
+            // EIM-specific badges
+            eim: [
+                { id: 'badge_eim_safety', icon: '🦺', name: 'Safety Certified', desc: 'Pass EIM Safety & PPE (≥70%).',
+                    condition: (s) => (s.modules['eim_safety']?.lastPct || 0) >= 70 },
+                { id: 'badge_eim_circuit', icon: '🔌', name: 'Circuit Builder', desc: 'Pass EIM Circuit Installation (≥70%).',
+                    condition: (s) => (s.modules['eim_circuit']?.lastPct || 0) >= 70 },
+                { id: 'badge_eim_symbols', icon: '🔍', name: 'Symbol Master', desc: 'Pass EIM Electrical Symbols (≥70%).',
+                    condition: (s) => (s.modules['eim_symbols']?.lastPct || 0) >= 70 },
+                { id: 'badge_eim_troubleshoot', icon: '🛠️', name: 'Fault Finder', desc: 'Pass EIM Circuit Troubleshooting (≥70%).',
+                    condition: (s) => (s.modules['eim_troubleshoot']?.lastPct || 0) >= 70 },
+            ],
+            // CCS-specific badges
+            ccs: [
+                { id: 'badge_ccs_script', icon: '📋', name: 'Script Savvy', desc: 'Pass CCS Script Savvy (≥70%).',
+                    condition: (s) => (s.modules['ccs_script']?.lastPct || 0) >= 70 },
+                { id: 'badge_ccs_storm', icon: '🌊', name: 'Storm Calmer', desc: 'Pass CCS Calm the Storm (≥70%).',
+                    condition: (s) => (s.modules['ccs_storm']?.lastPct || 0) >= 70 },
+                { id: 'badge_ccs_speed', icon: '⚡', name: 'Speed Demon', desc: 'Pass CCS System Speed (≥70%).',
+                    condition: (s) => (s.modules['ccs_speed']?.lastPct || 0) >= 70 },
+                { id: 'badge_ccs_quality', icon: '⭐', name: 'Quality Star', desc: 'Pass CCS Quality Quest (≥70%).',
+                    condition: (s) => (s.modules['ccs_quality']?.lastPct || 0) >= 70 },
+                { id: 'badge_ccs_live', icon: '🎙️', name: 'Call Hero', desc: 'Pass CCS The Live Call (≥70%).',
+                    condition: (s) => (s.modules['ccs_live']?.lastPct || 0) >= 70 },
+            ],
+            // PC OPS-specific badges
+            pcops: [
+                { id: 'badge_pc_ohs', icon: '🛡️', name: 'Safety Savvy', desc: 'Pass PC OHS & Ergonomics (≥70%).',
+                    condition: (s) => (s.modules['pc_ohs']?.lastPct || 0) >= 70 },
+                { id: 'badge_pc_os', icon: '📁', name: 'File Master', desc: 'Pass PC OS & File Management (≥70%).',
+                    condition: (s) => (s.modules['pc_os']?.lastPct || 0) >= 70 },
+                { id: 'badge_pc_typing', icon: '⌨️', name: 'Keyboard Ninja', desc: 'Pass PC Typing & Shortcuts (≥70%).',
+                    condition: (s) => (s.modules['pc_typing']?.lastPct || 0) >= 70 },
+                { id: 'badge_pc_spread', icon: '📊', name: 'Spreadsheet Pro', desc: 'Pass PC Spreadsheet Ops (≥70%).',
+                    condition: (s) => (s.modules['pc_spread']?.lastPct || 0) >= 70 },
+                { id: 'badge_pc_maint', icon: '🔧', name: 'Tech Fixer', desc: 'Pass PC System Maintenance (≥70%).',
+                    condition: (s) => (s.modules['pc_maint']?.lastPct || 0) >= 70 },
+            ]
+        };
+
+        // Helper: get badges for a specific track
+        function getBadgesForTrack(track) {
+            const allBadges = BADGES_DEF.all || [];
+            const trackBadges = BADGES_DEF[track] || [];
+            return [...allBadges, ...trackBadges];
+        }
+
+        const XP_PER_LEVEL = [0, 100, 250, 450, 700, 1000, 1400, 1900, 2500, 3200];
+
+        const MOCK_LEADERBOARD = [
+            { name: 'Maria Santos', track: 'eim', xp: 840, level: 5 },
+            { name: 'Jose Reyes', track: 'ccs', xp: 720, level: 4 },
+            { name: 'Ana Dela Cruz', track: 'pcops', xp: 615, level: 4 },
+            { name: 'Carlo Bautista', track: 'eim', xp: 510, level: 3 },
+            { name: 'Liza Mendoza', track: 'ccs', xp: 480, level: 3 },
+            { name: 'Ramon Torres', track: 'pcops', xp: 355, level: 2 },
+            { name: 'Grace Villanueva', track: 'ccs', xp: 290, level: 2 },
+            { name: 'Paolo Garcia', track: 'eim', xp: 155, level: 1 },
+        ];
+
+        // ══════════════════════════════════════════
+        // GAME STATE
+        // ══════════════════════════════════════════
+        let player = null;
+        let state = null;
+        let quizState = null;
+        let quizTimer = null;
+
+        function initState(track, name, id) {
+            return {
+                name,
+                id,
+                track,
+                xp: 0,
+                level: 1,
+                modules: {},
+                badges: [],
+                totalCorrect: 0,
+                perfectModules: 0,
+                modulesCompleted: 0,
+                timedCorrect: 0,
+                passedInTrack: 0,
+                history: [],
+            };
+        }
+
+        // ══════════════════════════════════════════
+        // BACKEND API
+        // ══════════════════════════════════════════
+        // ── After you deploy the backend (see server/README.md), replace the
+        // localhost URL below with your live URL, e.g.:
+        //   'https://skillquest-api-xxxx.onrender.com/api'
+       const API_BASE = window.SKILLQUEST_API_BASE || 'https://skillquest-api-llyp.onrender.com/api'; 
+
+        let authToken = null;
+        let currentUser = null;
+
+        async function apiCall(path, { method = 'GET', body, auth = true } = {}) {
+            const headers = { 'Content-Type': 'application/json' };
+            if (auth && authToken) headers.Authorization = `Bearer ${authToken}`;
+            const res = await fetch(`${API_BASE}${path}`, {
+                method,
+                headers,
+                body: body !== undefined ? JSON.stringify(body) : undefined,
+            });
+            let data = {};
+            try { data = await res.json(); } catch (e) {}
+            if (!res.ok) throw new Error(data.error || `Request failed (${res.status})`);
+            return data;
+        }
+
+        function saveSession() {
+            if (authToken && currentUser) {
+                localStorage.setItem('skillquest_session', JSON.stringify({ token: authToken, user: currentUser }));
+                if (state && state.track === 'pcops') {
+                    localStorage.setItem('skillquest_actual_track', 'pcops');
+                } else {
+                    localStorage.removeItem('skillquest_actual_track');
+                }
+            }
+        }
+
+        function loadSession() {
+            try {
+                const raw = localStorage.getItem('skillquest_session');
+                return raw ? JSON.parse(raw) : null;
+            } catch (e) { return null; }
+        }
+
+        function clearSession() {
+            localStorage.removeItem('skillquest_session');
+            localStorage.removeItem('skillquest_actual_track');
+            authToken = null;
+            currentUser = null;
+        }
+
+        function progressToState(user, p) {
+            const actualTrack = localStorage.getItem('skillquest_actual_track');
+            // FIX: Determine the correct track display name
+            let track = user.track;
+            // If the user selected pcops during registration or login, use pcops as the display track
+            if (actualTrack === 'pcops' || (user.track === 'ccs' && actualTrack === 'pcops')) {
+                track = 'pcops';
+            }
+            return {
+                name: user.fullName,
+                id: user.studentId || 'N/A',
+                track: track,
+                xp: p.xp,
+                level: p.level,
+                modules: p.modules || {},
+                badges: p.badges || [],
+                totalCorrect: p.totalCorrect || 0,
+                perfectModules: p.perfectModules || 0,
+                modulesCompleted: p.modulesCompleted || 0,
+                timedCorrect: p.timedCorrect || 0,
+                passedInTrack: p.passedInTrack || 0,
+                history: p.history || [],
+            };
+        }
+
+        function stateToProgressBody() {
+            // FIX: When saving, store the backend-compatible track
+            const backendTrack = state.track === 'pcops' ? 'ccs' : state.track;
+            return {
+                xp: state.xp,
+                level: state.level,
+                totalCorrect: state.totalCorrect,
+                perfectModules: state.perfectModules,
+                modulesCompleted: state.modulesCompleted,
+                timedCorrect: state.timedCorrect,
+                passedInTrack: state.passedInTrack,
+                modules: state.modules,
+                badges: state.badges,
+                history: state.history,
+                _actualTrack: state.track === 'pcops' ? 'pcops' : undefined,
+            };
+        }
+
+        function saveState() {
+            if (!state || !authToken || currentUser?.role !== 'trainee') return;
+            if (state.track === 'pcops') {
+                localStorage.setItem('skillquest_actual_track', 'pcops');
+            }
+            apiCall('/progress', { method: 'PUT', body: stateToProgressBody() })
+                .catch((e) => showToast('⚠ Could not save progress: ' + e.message));
+        }
+
+        async function resumeSession() {
+            const saved = loadSession();
+            if (!saved) { showToast('⚠ No saved session found'); return; }
+            authToken = saved.token;
+            currentUser = saved.user;
+            try {
+                if (currentUser.role === 'trainee') {
+                    const p = await apiCall('/progress');
+                    state = progressToState(currentUser, p);
+                    // FIX: If the actual track is pcops, update the user object for display
+                    const actualTrack = localStorage.getItem('skillquest_actual_track');
+                    if (actualTrack === 'pcops') {
+                        currentUser.track = 'pcops';
+                    }
+                    updateHUD();
+                    showScreen('main');
+                    switchTab('dashboard', document.querySelector('.nav-tab'));
+                } else {
+                    await openTrainerDashboard();
+                }
+            } catch (e) {
+                showToast('⚠ Session expired — please log in again');
+                clearSession();
+                showScreen('login');
+            }
+        }
+
+        function logout() {
+            clearInterval(quizTimer);
+            clearSession();
+            state = null;
+            showToast('Logged out');
+            showScreen('splash');
+            document.getElementById('continue-btn').style.display = 'none';
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const btn = document.getElementById('continue-btn');
+            if (btn && loadSession()) btn.style.display = '';
+            const statusEl = document.getElementById('api-status');
+            if (statusEl) {
+                fetch(`${API_BASE}/health`).then(r => {
+                    statusEl.textContent = r.ok ? `API connected · ${API_BASE}` : `API unreachable · ${API_BASE}`;
+                }).catch(() => { statusEl.textContent =
+                    `⚠ Backend not running at ${API_BASE} — start the /server first, or use Quick Demo`; });
+            }
+        });
+
+        function calcLevel(xp) {
+            for (let i = XP_PER_LEVEL.length - 1; i >= 0; i--) {
+                if (xp >= XP_PER_LEVEL[i]) return i + 1;
+            }
+            return 1;
+        }
+
+        function xpForLevel(lvl) { return XP_PER_LEVEL[Math.min(lvl - 1, XP_PER_LEVEL.length - 1)]; }
+
+        function xpForNextLevel(lvl) { return XP_PER_LEVEL[Math.min(lvl, XP_PER_LEVEL.length - 1)]; }
+
+        function addXP(amount) {
+            const prevLevel = state.level;
+            state.xp += amount;
+            state.level = calcLevel(state.xp);
+            updateHUD();
+            showXPPopup(amount);
+            if (state.level > prevLevel) {
+                document.getElementById('levelup-msg').textContent =
+                    `You reached Level ${state.level}! XP earned: ${state.xp}. Keep pushing toward NC readiness!`;
+                openModal('levelup-modal');
+            }
+            checkBadges();
+            saveState();
+        }
+
+        function checkBadges() {
+            const trackBadges = getBadgesForTrack(state.track);
+            trackBadges.forEach(b => {
+                if (!state.badges.includes(b.id) && b.condition(state)) {
+                    state.badges.push(b.id);
+                    document.getElementById('badge-modal-icon').textContent = b.icon;
+                    document.getElementById('badge-modal-msg').textContent =
+                        `You earned the "${b.name}" badge! ${b.desc}`;
+                    setTimeout(() => openModal('badge-modal'), 800);
+                }
+            });
+        }
+
+        // ══════════════════════════════════════════
+        // UI HELPERS
+        // ══════════════════════════════════════════
+        function showScreen(id) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+        }
+
+        function openModal(id) { document.getElementById(id).classList.add('open'); }
+
+        function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.classList.add('show');
+            setTimeout(() => t.classList.remove('show'), 2600);
+        }
+
+        function showXPPopup(amount) {
+            const el = document.createElement('div');
+            el.className = 'xp-popup';
+            el.textContent = `+${amount} XP`;
+            document.body.appendChild(el);
+            setTimeout(() => el.remove(), 650);
+        }
+
+        function updateHUD() {
+            if (!state) return;
+            document.getElementById('hud-name').textContent = state.name;
+            document.getElementById('hud-track').textContent = TRACKS[state.track]?.label || state.track;
+            document.getElementById('hud-level').textContent = state.level;
+            document.getElementById('hud-xp').textContent = state.xp;
+            const next = xpForNextLevel(state.level);
+            const prev = xpForLevel(state.level);
+            document.getElementById('hud-next').textContent = next;
+            const pct = Math.min(100, Math.round(((state.xp - prev) / (next - prev)) * 100));
+            document.getElementById('hud-xp-bar').style.width = pct + '%';
+        }
+
+        function selectRole(role, el) {
+            document.querySelectorAll('[data-role]').forEach(c => c.classList.remove('selected'));
+            el.classList.add('selected');
+            window._selectedRole = role;
+            const trackGroup = document.getElementById('reg-track-group');
+            const submitBtn = document.getElementById('reg-submit-btn');
+            if (role === 'trainer') {
+                trackGroup.style.display = 'none';
+                submitBtn.textContent = 'Create Trainer Account →';
+            } else {
+                trackGroup.style.display = '';
+                submitBtn.textContent = 'Create Account →';
+            }
+        }
+        window._selectedRole = 'trainee';
+
+        function selectTrack(track, el) {
+            document.querySelectorAll('.track-card[data-track]').forEach(c => c.classList.remove('selected'));
+            el.classList.add('selected');
+            el.dataset.track = track;
+            window._selectedTrack = track;
+            window._selectedActualTrack = track;
+        }
+
+        function showFormError(id, message) {
+            const el = document.getElementById(id);
+            el.textContent = message;
+            el.style.display = 'block';
+        }
+
+        function hideFormError(id) {
+            document.getElementById(id).style.display = 'none';
+        }
+
+        function togglePasswordVisibility(inputId, toggleButton) {
+            const input = document.getElementById(inputId);
+            const isHidden = input.type === 'password';
+            input.type = isHidden ? 'text' : 'password';
+            toggleButton.textContent = isHidden ? 'Hide' : 'Show';
+            toggleButton.setAttribute('aria-label', isHidden ? 'Hide password' : 'Show password');
+            toggleButton.setAttribute('aria-pressed', String(isHidden));
+        }
+
+        async function registerAccount() {
+            hideFormError('reg-error');
+            const username = document.getElementById('reg-username').value.trim();
+            const password = document.getElementById('reg-password').value;
+            const name = document.getElementById('reg-name').value.trim();
+            const id = document.getElementById('reg-id').value.trim();
+            const role = window._selectedRole || 'trainee';
+            const actualTrack = window._selectedActualTrack || window._selectedTrack;
+
+            if (!username) return showFormError('reg-error', 'Please enter a username');
+            if (!password || password.length < 6) return showFormError('reg-error', 'Password must be at least 6 characters');
+            if (!name) return showFormError('reg-error', 'Please enter your full name');
+            if (role === 'trainee' && !actualTrack) return showFormError('reg-error', 'Please select your NC track');
+
+            // FIX: Always send the actual track to the backend
+            // The backend should support 'eim', 'ccs', and 'pcops' as valid tracks
+            let backendTrack = actualTrack;
+
+            const btn = document.getElementById('reg-submit-btn');
+            btn.disabled = true;
+            try {
+                const body = { username, password, role, fullName: name, studentId: id || undefined };
+                if (role === 'trainee') body.track = backendTrack;
+                const data = await apiCall('/auth/register', { method: 'POST', body, auth: false });
+                authToken = data.token;
+                currentUser = data.user;
+                // Ensure the user object has the correct track
+                currentUser.track = actualTrack;
+                saveSession();
+                if (role === 'trainee') {
+                    state = progressToState(currentUser, {
+                        xp: 0,
+                        level: 1,
+                        modules: {},
+                        badges: [],
+                        totalCorrect: 0,
+                        perfectModules: 0,
+                        modulesCompleted: 0,
+                        timedCorrect: 0,
+                        passedInTrack: 0,
+                        history: [],
+                    });
+                    // FIX: Ensure state.track is the actual track
+                    state.track = actualTrack;
+                    updateHUD();
+                    showScreen('main');
+                    switchTab('dashboard', document.querySelector('.nav-tab'));
+                } else {
+                    await openTrainerDashboard();
+                }
+            } catch (e) {
+                showFormError('reg-error', e.message);
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        async function loginAccount() {
+            hideFormError('login-error');
+            const username = document.getElementById('login-username').value.trim();
+            const password = document.getElementById('login-password').value;
+            if (!username || !password) return showFormError('login-error', 'Enter your username and password');
+
+            const btn = document.getElementById('login-submit-btn');
+            btn.disabled = true;
+            try {
+                const data = await apiCall('/auth/login', { method: 'POST', body: { username, password }, auth: false });
+                authToken = data.token;
+                currentUser = data.user;
+                saveSession();
+                if (currentUser.role === 'trainee') {
+                    const p = await apiCall('/progress');
+                    // FIX: Get the actual track from the stored session
+                    const actualTrack = localStorage.getItem('skillquest_actual_track');
+                    if (actualTrack === 'pcops') {
+                        currentUser.track = 'pcops';
+                    }
+                    state = progressToState(currentUser, p);
+                    // FIX: Ensure state.track is correct
+                    if (actualTrack === 'pcops') {
+                        state.track = 'pcops';
+                    }
+                    updateHUD();
+                    showScreen('main');
+                    switchTab('dashboard', document.querySelector('.nav-tab'));
+                } else {
+                    await openTrainerDashboard();
+                }
+            } catch (e) {
+                showFormError('login-error', e.message);
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        async function openTrainerDashboard(track) {
+            showScreen('trainer-main');
+            document.getElementById('trainer-hud-name').textContent = currentUser.fullName;
+            const el = document.getElementById('trainer-content');
+            el.innerHTML = `<p style="color:var(--muted);">Loading trainees…</p>`;
+            try {
+                const query = track ? `?track=${track}` : '';
+                const trainees = await apiCall(`/trainer/trainees${query}`);
+                renderTrainerDashboard(el, trainees, track);
+            } catch (e) {
+                el.innerHTML = `<p style="color:var(--accent4);">Could not load trainees: ${e.message}</p>`;
+            }
+        }
+
+        function renderTrainerDashboard(el, trainees, activeTrack) {
+            const tabs = [
+                ['', 'All Tracks'],
+                ['eim', 'EIM NC II'],
+                ['ccs', 'CCS NC II'],
+                ['pcops', 'PC OPS NC II']
+            ];
+            el.innerHTML = `
+            <div class="section-title">Trainee Results (${trainees.length})</div>
+            <div style="display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap;">
+              ${tabs.map(([val, label]) => `
+                <button class="btn ${((activeTrack||'')===val) ? 'btn-primary' : 'btn-secondary'}" style="padding:8px 16px;font-size:13px;"
+                  onclick="openTrainerDashboard(${val ? `'${val}'` : 'undefined'})">${label}</button>
+              `).join('')}
+            </div>
+            ${trainees.length === 0 ? `<p style="color:var(--muted);">No trainees yet for this track.</p>` : `
+            <div class="leaderboard-table">
+              ${trainees.map((t, i) => {
+                const displayTrack = t._actualTrack === 'pcops' ? 'pcops' : t.track;
+                return `
+                  <div class="lb-row">
+                    <div class="lb-rank">${i + 1}</div>
+                    <div class="lb-player">
+                      <div class="lb-name">${t.fullName}${t.studentId ? ` <span style="color:var(--muted);font-size:11px;">(${t.studentId})</span>` : ''}</div>
+                      <div class="lb-track-tag">${TRACKS[displayTrack]?.label || displayTrack} · ${t.modulesCompleted} modules · ${(t.badges||[]).length} badges</div>
+                    </div>
+                    <div class="lb-level">Lv.${t.level}</div>
+                    <div class="lb-xp">${t.xp} XP</div>
+                  </div>`;
+              }).join('')}
+            </div>`}
+          `;
+        }
+
+        function loadDemo() {
+            state = initState('pcops', 'Demo Trainee', 'DEMO-001');
+            state.xp = 320;
+            state.level = 3;
+            state.totalCorrect = 12;
+            state.timedCorrect = 8;
+            state.modulesCompleted = 2;
+            state.modules['pc_ohs'] = { score: 4, attempts: 1, lastPct: 80 };
+            state.modules['pc_os'] = { score: 3, attempts: 1, lastPct: 60 };
+            state.badges = ['first_blood', 'xp_100'];
+            state.history = [
+                { id: 'pc_ohs', name: 'OHS & Ergonomics', pct: 80, rating: 'C', xpEarned: 90 },
+                { id: 'pc_os', name: 'OS & File Management', pct: 60, rating: 'NYC', xpEarned: 60 },
+            ];
+            localStorage.setItem('skillquest_actual_track', 'pcops');
+            updateHUD();
+            showScreen('main');
+            switchTab('dashboard', document.querySelector('.nav-tab'));
+        }
+
+        // ══════════════════════════════════════════
+        // TABS
+        // ══════════════════════════════════════════
+        function switchTab(tab, el) {
+            document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+            if (el) el.classList.add('active');
+            else {
+                const tabs = document.querySelectorAll('.nav-tab');
+                const map = { dashboard: 0, modules: 1, analytics: 2, badges: 3, leaderboard: 4 };
+                if (tabs[map[tab]]) tabs[map[tab]].classList.add('active');
+            }
+            const content = document.getElementById('main-content');
+            if (tab === 'dashboard') renderDashboard(content);
+            else if (tab === 'modules') renderModules(content);
+            else if (tab === 'analytics') renderAnalytics(content);
+            else if (tab === 'badges') renderBadges(content);
+            else if (tab === 'leaderboard') renderLeaderboard(content);
+        }
+
+        // ══════════════════════════════════════════
+        // DASHBOARD
+        // ══════════════════════════════════════════
+        function renderDashboard(el) {
+            const modules = COMPETENCY_MODULES[state.track] || [];
+            const completed = modules.filter(m => state.modules[m.id]?.lastPct >= 70).length;
+            const overallPct = modules.length > 0 ?
+                Math.round(modules.reduce((a, m) => a + (state.modules[m.id]?.lastPct || 0), 0) / modules.length) :
+                0;
+
+            el.innerHTML = `
+            <h2 style="font-family:'Rajdhani',sans-serif;font-size:24px;font-weight:700;margin-bottom:6px;">
+              Welcome back, ${state.name}! 👋
+            </h2>
+            <p style="color:var(--muted);font-size:14px;margin-bottom:24px;">
+              Track: <strong style="color:var(--text);">${TRACKS[state.track]?.full || state.track}</strong> &nbsp;·&nbsp; Student ID: ${state.id}
+            </p>
+            <div class="dash-grid">
+              <div class="stat-card">
+                <div class="stat-label">Total XP</div>
+                <div class="stat-value" style="color:var(--accent3)">${state.xp}</div>
+                <div class="stat-sub">Level ${state.level} Trainee</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-label">Modules Passed</div>
+                <div class="stat-value" style="color:var(--accent2)">${completed} / ${modules.length}</div>
+                <div class="stat-sub">≥70% = Competent</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-label">Overall Score</div>
+                <div class="stat-value" style="color:${overallPct>=70?'var(--accent2)':'var(--accent4)'}">${overallPct}%</div>
+                <div class="stat-sub">${overallPct>=70?'Competent':'Needs Practice'}</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-label">Badges Earned</div>
+                <div class="stat-value" style="color:var(--accent1)">${state.badges.length}</div>
+                <div class="stat-sub">of ${getBadgesForTrack(state.track).length} total</div>
+              </div>
+            </div>
+
+            <div class="section-title">NC Readiness Progress</div>
+            <div style="background:var(--panel);border:1px solid var(--border);border-radius:var(--r);padding:20px;margin-bottom:28px;">
+              ${modules.map(m => {
+                const mod = state.modules[m.id];
+                const pct = mod?.lastPct || 0;
+                return `
+                  <div style="margin-bottom:14px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+                      <span style="font-size:14px;font-weight:500;">${m.icon} ${m.name}</span>
+                      <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:${pct>=70?'var(--accent2)':'var(--muted)'};">${pct}% ${pct>=70?'✓ C':'NYC'}</span>
+                    </div>
+                    <div style="height:8px;background:var(--border);border-radius:4px;overflow:hidden;">
+                      <div style="height:100%;width:${pct}%;background:${pct>=70?'var(--accent2)':'var(--accent1)'};border-radius:4px;transition:width .5s;"></div>
+                    </div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+
+            <div class="section-title">Quick Play</div>
+            <div class="competency-grid">
+              ${modules.map((m,i) => {
+                const mod = state.modules[m.id];
+                const locked = i > 0 && !state.modules[modules[i-1].id];
+                const pct = mod?.lastPct || 0;
+                const status = !mod ? 'not-started' : pct >= 70 ? 'competent' : 'nyc';
+                return `
+                  <div class="comp-card ${state.track} ${locked?'locked':''} ${status==='competent'?'completed':''}"
+                       onclick="${locked?'showToast(\'🔒 Complete the previous module first!\')':  `startGameModule('${m.id}')`}">
+                    <div class="comp-header">
+                      <div class="comp-icon">${m.icon}</div>
+                      <div class="comp-status ${status==='competent'?'competent':status==='nyc'?'nyc':status==='not-started'?'locked-s':'in-progress'}">
+                        ${status==='competent'?'✓ COMPETENT':status==='nyc'?'✗ NYC':'NOT STARTED'}
+                      </div>
+                    </div>
+                    <div class="comp-name">${m.name}</div>
+                    <div class="comp-desc">${m.desc}</div>
+                    <div class="comp-progress-bar"><div class="comp-progress-fill" style="width:${pct}%"></div></div>
+                    <div class="comp-meta">
+                      <span>${m.type === 'game' ? m.totalLevels + ' levels · interactive game' : 'questions'}</span>
+                      <span>${pct}%${mod?.attempts?` · ${mod.attempts} attempt${mod.attempts>1?'s':''}`:''}</span>
+                    </div>
+                  </div>`;
+              }).join('')}
+            </div>
+          `;
+        }
+
+        // ══════════════════════════════════════════
+        // MODULES
+        // ══════════════════════════════════════════
+        function renderModules(el) {
+            const trackNames = Object.keys(COMPETENCY_MODULES);
+            el.innerHTML = `
+            <div class="section-title">All Qualification Modules</div>
+            ${trackNames.map(tk => `
+              <div style="margin-bottom:28px;">
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+                  <span style="font-size:24px;">${TRACKS[tk]?.icon || '📚'}</span>
+                  <div>
+                    <div style="font-family:'Rajdhani',sans-serif;font-size:18px;font-weight:700;">${TRACKS[tk]?.label || tk}</div>
+                    <div style="font-size:12px;color:var(--muted);">${TRACKS[tk]?.full || tk}</div>
+                  </div>
+                  ${tk===state.track?'<span style="font-size:11px;padding:3px 10px;border-radius:99px;background:rgba(168,85,247,.15);color:var(--pcops);font-family:\'JetBrains Mono\',monospace;">YOUR TRACK</span>':''}
+                </div>
+                <div class="competency-grid">
+                  ${COMPETENCY_MODULES[tk].map(m => {
+                    const mod = state.modules[m.id];
+                    const pct = mod?.lastPct || 0;
+                    const canPlay = tk === state.track;
+                    return `
+                      <div class="comp-card ${tk}" onclick="${canPlay?`startGameModule('${m.id}')`:  `showToast('Switch to ${TRACKS[tk]?.label || tk} to attempt this module')`}"
+                           style="${!canPlay?'opacity:.6;cursor:not-allowed;':''}">
+                        <div class="comp-header">
+                          <div class="comp-icon">${m.icon}</div>
+                          <div class="comp-status ${pct>=70?'competent':mod?'nyc':'locked-s'}">
+                            ${pct>=70?'✓ C':mod?'NYC':'OPEN'}
+                          </div>
+                        </div>
+                        <div class="comp-name">${m.name}</div>
+                        <div class="comp-desc">${m.desc}</div>
+                        <div class="comp-progress-bar"><div class="comp-progress-fill" style="width:${pct}%"></div></div>
+                        <div class="comp-meta">
+                          <span>${m.type === 'game' ? m.totalLevels + ' levels · interactive game' : 'questions'}</span>
+                          <span>${pct}%</span>
+                        </div>
+                      </div>`;
+                  }).join('')}
+                </div>
+              </div>
+            `).join('')}
+          `;
+        }
+
+        // ══════════════════════════════════════════
+        // ANALYTICS
+        // ══════════════════════════════════════════
+        function renderAnalytics(el) {
+            const modules = COMPETENCY_MODULES[state.track] || [];
+            el.innerHTML = `
+            <div class="section-title">Performance Analytics</div>
+            <div class="analytics-grid">
+              <div class="analytics-card">
+                <h3>Competency Unit Progress</h3>
+                ${modules.map(m => {
+                  const pct = state.modules[m.id]?.lastPct || 0;
+                  return `
+                    <div class="competency-row">
+                      <div class="comp-row-name">${m.icon} ${m.name}</div>
+                      <div class="comp-row-bar"><div class="comp-row-fill" style="width:${pct}%;background:${pct>=70?'var(--accent2)':'var(--accent1)'}"></div></div>
+                      <div class="comp-row-pct">${pct}%</div>
+                    </div>`;
+                }).join('')}
+              </div>
+              <div class="analytics-card">
+                <h3>XP & Level Progression</h3>
+                <div style="text-align:center;padding:20px 0;">
+                  <div style="font-family:'Rajdhani',sans-serif;font-size:64px;font-weight:700;color:var(--accent3);line-height:1;">${state.level}</div>
+                  <div style="font-size:13px;color:var(--muted);margin-bottom:16px;">Current Level</div>
+                  <div style="background:var(--border);height:12px;border-radius:6px;overflow:hidden;margin-bottom:8px;">
+                    <div style="height:100%;width:${Math.min(100,Math.round(((state.xp-xpForLevel(state.level))/(xpForNextLevel(state.level)-xpForLevel(state.level)))*100))}%;background:linear-gradient(90deg,var(--accent3),#f97316);border-radius:6px;transition:width .5s;"></div>
+                  </div>
+                  <div style="font-size:12px;color:var(--muted);font-family:'JetBrains Mono',monospace;">${state.xp} / ${xpForNextLevel(state.level)} XP to Level ${state.level+1}</div>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:8px;">
+                  <div style="background:var(--card);border-radius:8px;padding:14px;text-align:center;">
+                    <div style="font-family:'Rajdhani',sans-serif;font-size:28px;font-weight:700;color:var(--accent2);">${state.totalCorrect}</div>
+                    <div style="font-size:11px;color:var(--muted);">Correct Answers</div>
+                  </div>
+                  <div style="background:var(--card);border-radius:8px;padding:14px;text-align:center;">
+                    <div style="font-family:'Rajdhani',sans-serif;font-size:28px;font-weight:700;color:var(--accent1);">${state.modulesCompleted}</div>
+                    <div style="font-size:11px;color:var(--muted);">Modules Attempted</div>
+                  </div>
+                </div>
+              </div>
+              <div class="analytics-card" style="grid-column:1/-1;">
+                <h3>Attempt History</h3>
+                ${state.history.length === 0
+                  ? '<div style="color:var(--muted);font-size:14px;text-align:center;padding:20px;">No attempts yet — complete a module to see your history.</div>'
+                  : `<div class="history-list">
+                      ${state.history.slice().reverse().map(h => {
+                        const mod = COMPETENCY_MODULES[state.track]?.find(m => m.id === h.id);
+                        return `
+                          <div class="history-item">
+                            <div class="hist-icon">${mod?.icon||'📋'}</div>
+                            <div class="hist-name">${h.name}</div>
+                            <div class="hist-score">${h.pct}% · +${h.xpEarned} XP</div>
+                            <div class="hist-rating ${h.rating==='C'?'rating-c':'rating-nyc'}">${h.rating}</div>
+                          </div>`;
+                      }).join('')}
+                    </div>`}
+              </div>
+            </div>
+          `;
+        }
+
+        // ══════════════════════════════════════════
+        // BADGES - Shows only badges the track can achieve
+        // ══════════════════════════════════════════
+        function renderBadges(el) {
+            const trackBadges = getBadgesForTrack(state.track);
+            const earnedCount = state.badges.filter(id => trackBadges.some(b => b.id === id)).length;
+
+            el.innerHTML = `
+            <div class="section-title">🏅 ${TRACKS[state.track]?.label} Badges</div>
+            <p style="color:var(--muted);font-size:14px;margin-bottom:20px;">
+              You've earned <strong style="color:var(--accent3);">${earnedCount}</strong> out of <strong>${trackBadges.length}</strong> badges for your track.
+              Complete modules with ≥70% to earn track-specific badges.
+            </p>
+            <div class="badges-grid">
+              ${trackBadges.map(b => {
+                const earned = state.badges.includes(b.id);
+                return `
+                  <div class="badge-card ${earned?'earned':'locked-b'}">
+                    <div class="badge-icon">${b.icon}</div>
+                    <div class="badge-name">${b.name}</div>
+                    <div class="badge-desc">${b.desc}</div>
+                    ${earned?'<div class="badge-earned-tag">✓ EARNED</div>':'<div style="font-size:10px;color:var(--border);margin-top:6px;">🔒 LOCKED</div>'}
+                  </div>`;
+              }).join('')}
+            </div>
+          `;
+        }
+
+        // ══════════════════════════════════════════
+        // LEADERBOARD - Track-specific ranking
+        // ══════════════════════════════════════════
+        function renderLeaderboard(el) {
+            el.innerHTML = `<p style="color:var(--muted);">Loading leaderboard…</p>`;
+
+            const userTrack = state.track;
+            const trackLabel = TRACKS[userTrack]?.label || userTrack;
+
+            function getActualTrack(row) {
+                if (row._actualTrack === 'pcops') return 'pcops';
+                if (row.track === 'pcops') return 'pcops';
+                return row.track;
+            }
+
+            function isInUserTrack(row) {
+                const actual = getActualTrack(row);
+                if (userTrack === 'pcops') {
+                    return actual === 'pcops' || row._actualTrack === 'pcops';
+                }
+                return actual === userTrack;
+            }
+
+            const me = {
+                name: state.name,
+                track: state.track,
+                xp: state.xp,
+                level: state.level,
+                isMe: true,
+                _actualTrack: state.track === 'pcops' ? 'pcops' : undefined
+            };
+
+            const finish = (rows) => {
+                let filtered = rows.filter(r => isInUserTrack(r));
+
+                const meIncluded = filtered.some(r => {
+                    if (r.isMe) return true;
+                    if (r.name === state.name) {
+                        const rTrack = getActualTrack(r);
+                        return rTrack === state.track;
+                    }
+                    return false;
+                });
+                if (!meIncluded) {
+                    filtered.push(me);
+                }
+
+                const sorted = filtered.sort((a, b) => b.xp - a.xp);
+
+                const unique = [];
+                const seen = new Set();
+                for (const p of sorted) {
+                    const key = p.name + getActualTrack(p);
+                    if (!seen.has(key)) {
+                        seen.add(key);
+                        unique.push(p);
+                    }
+                }
+
+                const rankColors = ['gold', 'silver', 'bronze'];
+                el.innerHTML = `
+                <div class="section-title">🏆 ${trackLabel} Leaderboard</div>
+                <p style="color:var(--muted);font-size:13px;margin-bottom:16px;">
+                  Rankings among <strong style="color:var(--text);">${trackLabel}</strong> trainees.
+                  Keep earning XP to climb the board!
+                </p>
+                ${unique.length === 0 ? '<p style="color:var(--muted);">No other trainees in this track yet.</p>' : `
+                <div class="leaderboard-table">
+                  ${unique.map((p, i) => {
+                    const isMe = p.isMe || (p.name === state.name && getActualTrack(p) === state.track);
+                    const displayTrack = getActualTrack(p);
+                    return `
+                      <div class="lb-row ${isMe?'me':''}">
+                        <div class="lb-rank ${rankColors[i]||''}">${i===0?'🥇':i===1?'🥈':i===2?'🥉':i+1}</div>
+                        <div class="lb-player">
+                          <div class="lb-name">${p.name}${isMe?' <span style="font-size:10px;color:var(--accent1);">(You)</span>':''}</div>
+                          <div class="lb-track-tag">${TRACKS[displayTrack]?.label || displayTrack}</div>
+                        </div>
+                        <div class="lb-level">Lv.${p.level}</div>
+                        <div class="lb-xp">${p.xp} XP</div>
+                      </div>`;
+                  }).join('')}
+                </div>`}
+              `;
+            };
+
+            if (authToken) {
+                apiCall('/leaderboard')
+                    .then((rows) => {
+                        const mapped = rows.map(r => ({
+                            name: r.name,
+                            track: r.track,
+                            xp: r.xp,
+                            level: r.level,
+                            _actualTrack: r._actualTrack,
+                            isMe: r.name === state.name && (r.track === state.track || r._actualTrack === state
+                            .track)
+                        }));
+                        finish(mapped);
+                    })
+                    .catch(() => {
+                        const filteredMock = MOCK_LEADERBOARD.filter(r => {
+                            if (userTrack === 'pcops') {
+                                return r.track === 'pcops';
+                            }
+                            return r.track === userTrack;
+                        });
+                        finish(filteredMock);
+                    });
+            } else {
+                const filteredMock = MOCK_LEADERBOARD.filter(r => {
+                    if (userTrack === 'pcops') {
+                        return r.track === 'pcops';
+                    }
+                    return r.track === userTrack;
+                });
+                finish(filteredMock);
+            }
+        }
+
+        // ══════════════════════════════════════════
+        // GAME MODULE ENGINE - Loads the appropriate game file
+        // ══════════════════════════════════════════
+        let currentGameModule = null;
+        const gameProgress = {};
+
+        function startGameModule(moduleId) {
+            const module = Object.values(COMPETENCY_MODULES).flat().find(m => m.id === moduleId);
+            if (!module) {
+                showToast('Module not found');
+                return;
+            }
+
+            currentGameModule = module;
+            const track = Object.entries(COMPETENCY_MODULES).find(([k, v]) => v.some(m => m.id === module.id))?.[0];
+
+            document.getElementById('gm-comp-name').textContent = `${module.icon} ${module.name}`;
+            const badge = document.getElementById('gm-track-badge');
+            badge.textContent = TRACKS[track]?.label || track;
+            const colorMap = { eim: '245,158,11', ccs: '34,211,165', pcops: '168,85,247' };
+            badge.style.background = `rgba(${colorMap[track] || '168,85,247'},.1)`;
+            badge.style.color = TRACKS[track]?.color || '#a855f7';
+            badge.style.border = `1px solid ${TRACKS[track]?.color || '#a855f7'}`;
+            document.getElementById('gm-progress-text').textContent = 'Loading game...';
+
+            // Load the appropriate game file with module parameters
+            const iframe = document.getElementById('gm-iframe');
+            let gameFile = module.gameFile || 'eim-game.html';
+
+            // Add query parameters for the game mode
+            let url = gameFile;
+            const params = new URLSearchParams();
+            params.set('embed', '1');
+            if (module.gameMode) {
+                params.set('game', module.gameMode);
+            }
+            params.set('module', module.id);
+            url += '?' + params.toString();
+
+            iframe.src = url;
+
+            // Reset progress tracking
+            const prev = state.modules[module.id];
+            gameProgress[module.id] = prev ?
+                { completed: Math.round((prev.lastPct / 100) * module.totalLevels), total: module.totalLevels,
+                    pct: prev.lastPct, xp: 0, moduleComplete: prev.lastPct >= 70 } :
+                { completed: 0, total: module.totalLevels, pct: 0, xp: 0, moduleComplete: false };
+
+            showScreen('game-module-screen');
+        }
+
+        // ─── Message handler for game modules ──────────────────────
+        window.addEventListener('message', (e) => {
+            const data = e.data;
+            if (!data || !currentGameModule) {
+                // Check if it's a module complete message without currentGameModule
+                if (data && data.type === 'MODULE_COMPLETE' && data.moduleId) {
+                    handleModuleComplete(data.moduleId, data.pct, data.xpEarned || 0);
+                }
+                return;
+            }
+
+            const moduleId = currentGameModule.id;
+
+            // Handle progress updates from game modules
+            if (data.type === 'PROGRESS_UPDATE' || data.type === 'EIM_MODULE_PROGRESS' ||
+                data.type === 'CCS_MODULE_PROGRESS' || data.type === 'PC_OPS_PROGRESS') {
+
+                const prog = gameProgress[moduleId] || { completed: 0, total: data.total || currentGameModule.totalLevels,
+                    pct: 0, xp: 0, moduleComplete: false };
+
+                if (data.completed !== undefined) prog.completed = data.completed;
+                if (data.total) prog.total = data.total;
+                if (data.pct !== undefined) prog.pct = data.pct;
+                if (data.earnedXP) prog.xp = (prog.xp || 0) + data.earnedXP;
+                if (data.moduleComplete) prog.moduleComplete = true;
+
+                gameProgress[moduleId] = prog;
+
+                document.getElementById('gm-progress-text').textContent =
+                    `Level ${prog.completed} / ${prog.total} complete · ${prog.pct}%`;
+
+                if (data.moduleComplete) {
+                    showToast(`🎉 ${currentGameModule.name} complete!`);
+                    setTimeout(() => {
+                        handleModuleComplete(moduleId, prog.pct, prog.xp);
+                    }, 1000);
+                }
+            }
+
+            // Handle module complete directly
+            if (data.type === 'MODULE_COMPLETE') {
+                handleModuleComplete(data.moduleId || moduleId, data.pct || 0, data.xpEarned || 0);
+            }
+
+            // Handle exit
+            if (data.type === 'EIM_EXIT' || data.type === 'EXIT_MODULE') {
+                exitGameModule();
+            }
+
+            // Handle game ready
+            if (data.type === 'CSS_GAME_READY' || data.type === 'EIM_GAME_READY') {
+                document.getElementById('gm-progress-text').textContent =
+                    `Game ready! Complete all ${currentGameModule.totalLevels} levels.`;
+            }
+        });
+
+        function handleModuleComplete(moduleId, pct, xpEarned) {
+            const module = Object.values(COMPETENCY_MODULES).flat().find(m => m.id === moduleId);
+            if (!module) return;
+
+            const prev = state.modules[moduleId];
+            const bestPct = Math.max(pct, prev?.lastPct || 0);
+            const isImprovement = !prev || bestPct > prev.lastPct;
+            const rating = bestPct >= 70 ? 'C' : 'NYC';
+
+            state.modules[moduleId] = {
+                score: Math.round((bestPct / 100) * module.totalLevels),
+                attempts: (prev?.attempts || 0) + (isImprovement || !prev ? 1 : 0),
+                lastPct: bestPct,
+            };
+            if (!prev) state.modulesCompleted++;
+            if (bestPct === 100 && (!prev || prev.lastPct < 100)) state.perfectModules++;
+            if (rating === 'C') {
+                const trackModules = COMPETENCY_MODULES[state.track];
+                state.passedInTrack = trackModules.filter(m => state.modules[m.id]?.lastPct >= 70).length;
+            }
+            if (isImprovement && xpEarned > 0) {
+                state.history.push({ id: moduleId, name: module.name, pct: bestPct, rating, xpEarned });
+                addXP(xpEarned);
+            }
+
+            currentGameModule = null;
+            updateHUD();
+            saveState();
+            showMain();
+        }
+
+        function exitGameModule() {
+            if (currentGameModule) {
+                // Check if there's any progress to save
+                const moduleId = currentGameModule.id;
+                const prog = gameProgress[moduleId];
+                if (prog && prog.completed > 0 && prog.pct > 0) {
+                    handleModuleComplete(moduleId, prog.pct, prog.xp || 0);
+                } else {
+                    currentGameModule = null;
+                }
+            }
+            document.getElementById('gm-iframe').src = 'about:blank';
+            showMain();
+        }
+
+        // ══════════════════════════════════════════
+        // EXIT FUNCTIONS
+        // ══════════════════════════════════════════
+        function exitQuiz() {
+            clearInterval(quizTimer);
+            showMain();
+        }
+
+        function showMain() {
+            showScreen('main');
+            updateHUD();
+            const activeTab = document.querySelector('.nav-tab.active');
+            const tabName = activeTab?.textContent?.includes('Dashboard') ? 'dashboard' :
+                activeTab?.textContent?.includes('Analytics') ? 'analytics' : 'dashboard';
+            switchTab(tabName, activeTab);
+        }
+    </script>
+</body>
+</html>
