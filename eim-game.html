@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>EIM Circuit Master</title>
     <style>
-        /* ─── IMPORTS & RESET ─── */    
+        /* ─── IMPORTS & RESET ─── */
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@400;600;700;800&display=swap');
 
         * {
@@ -1648,6 +1648,16 @@
                 font-size: 18px;
             }
         }
+
+        /* ─── HEARTS (lives) ─── */
+        [id$="GameStars"], #liveGameHearts, #safetyLevelStars, .level-card .stars, .level-card.completed .stars {
+            color: #ff4d6d !important;
+            text-shadow: 0 0 10px rgba(255, 77, 109, 0.45) !important;
+            letter-spacing: 2px;
+        }
+        .hearts-row { color: #ff4d6d; letter-spacing: 2px; }
+        @keyframes heartHit { 0% { transform: scale(1); } 30% { transform: scale(1.35); } 100% { transform: scale(1); } }
+        .heart-hit { display: inline-block; animation: heartHit 0.4s; }
     </style>
 </head>
 <body>
@@ -1731,7 +1741,7 @@
             <div id="symbol-game" style="display:none;">
                 <div class="game-header">
                     <span class="level-tag" id="symbolGameLevel">Level 1</span>
-                    <span class="stars-display" id="symbolGameStars">★★★★★</span>
+                    <span class="stars-display" id="symbolGameStars">♥♥♥♥♥</span>
                     <span class="timer" id="symbolGameTimer">00:00</span>
                 </div>
                 <div class="drop-grid" id="symbolDropGrid"></div>
@@ -1781,7 +1791,7 @@
             <div id="wire-game" style="display:none;">
                 <div class="game-header">
                     <span class="level-tag" id="wireGameLevel">Level 1</span>
-                    <span class="stars-display" id="wireGameStars">★★★★★</span>
+                    <span class="stars-display" id="wireGameStars">♥♥♥♥♥</span>
                     <span class="timer" id="wireGameTimer">00:00</span>
                 </div>
                 <!-- ENHANCED CANVAS AREA -->
@@ -1832,7 +1842,7 @@
             <div id="fault-game" style="display:none;">
                 <div class="game-header">
                     <span class="level-tag" id="faultGameLevel">Level 1</span>
-                    <span class="stars-display" id="faultGameStars">★★★★★</span>
+                    <span class="stars-display" id="faultGameStars">♥♥♥♥♥</span>
                     <span class="timer" id="faultGameTimer">00:00</span>
                 </div>
                 <div class="fault-level-container">
@@ -1874,6 +1884,7 @@
                 <div class="fb-title green" id="faultFbTitle">Fixed!</div>
                 <div class="fb-sub" id="faultFbSub">You repaired the circuit successfully!</div>
                 <div class="fb-score" id="faultFbScore">
+                    <div class="row"><span class="label">Hearts Left</span><span class="hearts-row" id="fbHearts">♥♥♥♥♥</span></div>
                     <div class="row"><span class="label">Time Bonus</span><span id="fbTimeBonus">+45 XP</span></div>
                     <div class="row"><span class="label">Accuracy Bonus</span><span id="fbAccuracyBonus">+30 XP</span></div>
                     <div class="row"><span class="label">TOTAL XP</span><span class="text-glow" style="color:#f5a623;" id="fbTotalXP">75 XP</span></div>
@@ -1910,14 +1921,14 @@
             <div id="code-game" style="display:none;">
                 <div class="game-header">
                     <span class="level-tag" id="codeGameLevel">Level 1</span>
-                    <span class="stars-display" id="codeGameStars">★★★★★</span>
+                    <span class="stars-display" id="codeGameStars">♥♥♥♥♥</span>
                     <span class="timer" id="codeGameTimer">00:00</span>
                 </div>
 
                 <div class="safety-level-container">
                     <div class="safety-header">
                         <div class="safety-level-name" id="safetyLevelName">Basic Safety</div>
-                        <div class="safety-level-stars" id="safetyLevelStars">★★★★★</div>
+                        <div class="safety-level-stars" id="safetyLevelStars">♥♥♥♥♥</div>
                     </div>
 
                     <div class="safety-risk-box" id="safetyRiskBox">
@@ -1996,6 +2007,52 @@
         // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
         // STATE
         // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        // ♥ HEARTS — 5 lives per level; hearts left on a clear = the score basis
+        const MAX_HEARTS = 5;
+        const hearts = { cur: MAX_HEARTS, best: {} };
+        let heartsHeaderId = null;
+        let heartsFresh = false;
+        function heartsStr(n) { n = (n === undefined) ? hearts.cur : n; return '♥'.repeat(n) + '♡'.repeat(MAX_HEARTS - n); }
+        function paintHearts() {
+            const el = heartsHeaderId && document.getElementById(heartsHeaderId);
+            if (el) el.textContent = heartsStr();
+            const s = document.getElementById('safetyLevelStars');
+            if (s) s.textContent = heartsStr();
+        }
+        function resetHearts(headerId) { hearts.cur = MAX_HEARTS; heartsHeaderId = headerId; heartsFresh = false; paintHearts(); }
+        function syncHearts(headerId) { if (heartsFresh) resetHearts(headerId); else { heartsHeaderId = headerId; paintHearts(); } }
+        function loseHeart() {
+            if (hearts.cur > 0) hearts.cur--;
+            paintHearts();
+            const el = heartsHeaderId && document.getElementById(heartsHeaderId);
+            if (el) { el.classList.remove('heart-hit'); void el.offsetWidth; el.classList.add('heart-hit'); }
+            return hearts.cur === 0;
+        }
+        function keepHearts(game, levelId) { const k = game + ':' + levelId; hearts.best[k] = Math.max(hearts.best[k] || 0, hearts.cur); }
+        function levelHeartsStr(game, levelId, done) { return heartsStr(done ? (hearts.best[game + ':' + levelId] || 0) : 0); }
+        function heartsSummary(game, levelIds, completed) {
+            const earned = levelIds.reduce((s, id) => s + (completed.has(id) ? (hearts.best[game + ':' + id] || 0) : 0), 0);
+            const max = levelIds.length * MAX_HEARTS;
+            return { earned, max, pct: max ? Math.round(earned / max * 100) : 0 };
+        }
+        function showOutOfHearts(game, overlayId, p, hideScore) {
+            stopTimer();
+            if (state[game] && 'problem' in state[game]) state[game].problem = 0;
+            const g = id => document.getElementById(p + id);
+            g('FbIcon').textContent = '💔';
+            g('FbTitle').textContent = 'Out of Hearts!';
+            g('FbTitle').className = 'fb-title red';
+            g('FbSub').textContent = 'You lost all ' + MAX_HEARTS + ' hearts. Retry the level!';
+            const sc = g('FbScore');
+            if (sc) {
+                if (hideScore) sc.style.display = 'none';
+                else sc.innerHTML = '<div class="row"><span class="label">Hearts Left</span><span class="hearts-row">' + heartsStr() + '</span></div>';
+            }
+            const nx = g('FbNext'); if (nx) nx.style.display = 'none';
+            const rp = g('FbReplay'); if (rp) { rp.style.display = ''; rp.textContent = '↻ RETRY LEVEL'; }
+            document.getElementById(overlayId).classList.add('show');
+        }
+
         const state = {
             symbol: { level: 0, completed: new Set() },
             wire: { level: 0, completed: new Set() },
@@ -2018,11 +2075,13 @@
             try {
                 const completed = state[game].completed.size;
                 const total = levelsArr.length;
-                const pct = Math.round((completed / total) * 100);
+                const hs = heartsSummary(game, levelsArr.map(l => l.id), state[game].completed);
+                const pct = hs.pct;
                 (window.parent || window).postMessage({
                     type: 'EIM_MODULE_PROGRESS',
                     game, completed, total, pct,
                     earnedXP: earnedXP || 0,
+                    heartsLeft: hearts.cur, heartsEarned: hs.earned, heartsMax: hs.max,
                     moduleComplete: completed >= total
                 }, '*');
             } catch (e) { /* no parent listening — standalone mode */ }
@@ -2493,7 +2552,7 @@
                 if (isActive) div.classList.add('active');
                 if (idx > current + 1) div.classList.add('locked');
                 div.innerHTML =
-                    `<div class="num">${lv.id}</div><div class="name">${lv.name}</div><div class="stars">${isDone ? '★★★★★' : '☆☆☆☆☆'}</div>`;
+                    `<div class="num">${lv.id}</div><div class="name">${lv.name}</div><div class="stars">${levelHeartsStr(container.id.replace('LevelGrid', ''), lv.id, isDone)}</div>`;
                 if (idx <= current + 1 && !isDone) {
                     div.style.cursor = 'pointer';
                     div.addEventListener('click', () => {
@@ -2752,7 +2811,7 @@
                 el.style.opacity = '1';
             });
             document.getElementById('symbolGameLevel').textContent = 'Level ' + SYMBOL_LEVELS[state.symbol.level].id;
-            document.getElementById('symbolGameStars').textContent = '★★★★★';
+            resetHearts('symbolGameStars');
             startTimer('symbolGameTimer');
             document.getElementById('symbolFeedback').classList.remove('show');
             document.getElementById('symbolFbNext').style.display = 'none';
@@ -2819,6 +2878,8 @@
             
             if (allCorrect) {
                 setTimeout(() => showSymbolComplete(true), 500);
+            } else if (loseHeart()) {
+                setTimeout(() => showOutOfHearts('symbol', 'symbolFeedback', 'symbol'), 500);
             } else {
                 setTimeout(() => resetWrongAnswers(), 800);
             }
@@ -2904,8 +2965,9 @@
                 document.getElementById('symbolFbTitle').className = 'fb-title gold';
                 document.getElementById('symbolFbSub').textContent = 'You identified all symbols correctly!';
                 document.getElementById('symbolFbScore').innerHTML =
-                    `<div class="row"><span class="label">Time Bonus</span><span>+${Math.max(0, 60 - state.seconds)} XP</span></div><div class="row"><span class="label">Accuracy Bonus</span><span>+30 XP</span></div><div class="row"><span class="label">TOTAL XP</span><span class="text-glow" style="color:#f5a623;">${xp + 30} XP</span></div>`;
+                    `<div class="row"><span class="label">Hearts Left</span><span class="hearts-row">${heartsStr()}</span></div><div class="row"><span class="label">Time Bonus</span><span>+${Math.max(0, 60 - state.seconds)} XP</span></div><div class="row"><span class="label">Accuracy Bonus</span><span>+30 XP</span></div><div class="row"><span class="label">TOTAL XP</span><span class="text-glow" style="color:#f5a623;">${xp + 30} XP</span></div>`;
                 state.symbol.completed.add(SYMBOL_LEVELS[state.symbol.level].id);
+                keepHearts('symbol', SYMBOL_LEVELS[state.symbol.level].id);
                 notifyEimProgress('symbol', SYMBOL_LEVELS, xp + 30);
                 document.getElementById('symbolFbNext').style.display = (state.symbol.level < SYMBOL_LEVELS.length -
                     1) ? '' : 'none';
@@ -3280,7 +3342,7 @@
             document.getElementById('wireInstruction').innerHTML = level ? '🔌 Connect correctly to <span>turn on</span> the light.' :
                 'Connect correctly.';
             document.getElementById('wireGameLevel').textContent = 'Level ' + WIRE_LEVELS[circuitLevelIndex].id;
-            document.getElementById('wireGameStars').textContent = '★★★★★';
+            resetHearts('wireGameStars');
             startTimer('wireGameTimer');
             document.getElementById('wireFeedback').classList.add('hidden');
             document.getElementById('wireFeedbackOverlay').classList.remove('show');
@@ -3368,8 +3430,9 @@
                 document.getElementById('wireFbTitle').className = 'fb-title gold';
                 document.getElementById('wireFbSub').textContent = 'Great job! Circuit is correct.';
                 document.getElementById('wireFbScore').innerHTML =
-                    `<div class="row"><span class="label">Time Bonus</span><span>+${Math.max(0, 60 - state.seconds)} XP</span></div><div class="row"><span class="label">Accuracy Bonus</span><span>+30 XP</span></div><div class="row"><span class="label">TOTAL XP</span><span class="text-glow" style="color:#f5a623;">${xp + 30} XP</span></div>`;
+                    `<div class="row"><span class="label">Hearts Left</span><span class="hearts-row">${heartsStr()}</span></div><div class="row"><span class="label">Time Bonus</span><span>+${Math.max(0, 60 - state.seconds)} XP</span></div><div class="row"><span class="label">Accuracy Bonus</span><span>+30 XP</span></div><div class="row"><span class="label">TOTAL XP</span><span class="text-glow" style="color:#f5a623;">${xp + 30} XP</span></div>`;
                 state.wire.completed.add(WIRE_LEVELS[circuitLevelIndex].id);
+                keepHearts('wire', WIRE_LEVELS[circuitLevelIndex].id);
                 notifyEimProgress('wire', WIRE_LEVELS, xp + 30);
                 document.getElementById('wireFbNext').style.display = (circuitLevelIndex < WIRE_LEVELS.length -
                     1) ? '' : 'none';
@@ -3379,6 +3442,7 @@
             } else {
                 const fb = document.getElementById('wireFeedback');
                 fb.textContent = '❌ Circuit incorrect. Check your connections.';
+                if (loseHeart()) showOutOfHearts('wire', 'wireFeedbackOverlay', 'wire');
                 fb.className = 'wire-feedback error';
                 document.querySelector('.circuit-area').classList.remove('glow-active');
             }
@@ -3518,7 +3582,7 @@
             renderFaultProgressDots();
 
             document.getElementById('faultGameLevel').textContent = 'Level ' + FAULT_LEVELS[state.fault.level].id;
-            document.getElementById('faultGameStars').textContent = '★★★★★';
+            resetHearts('faultGameStars');
             startTimer('faultGameTimer');
 
             document.getElementById('faultFeedback').classList.remove('show');
@@ -3601,6 +3665,7 @@
                 buttons.forEach(b => b.disabled = true);
             } else {
                 btn.classList.add('selected-wrong');
+                if (loseHeart()) { showOutOfHearts('fault', 'faultFeedback', 'fault', true); return; }
                 feedback.textContent = '❌ Wrong action. Try again.';
                 feedback.className = 'choice-feedback error';
                 setTimeout(() => {
@@ -3668,6 +3733,9 @@
                     1) ? '' : 'none';
                 document.getElementById('faultFbReplay').textContent = '↻ REPLAY';
                 updateMainMenu();
+                keepHearts('fault', FAULT_LEVELS[state.fault.level].id);
+                document.getElementById('faultFbScore').style.display = '';
+                document.getElementById('fbHearts').textContent = heartsStr();
                 notifyEimProgress('fault', FAULT_LEVELS, totalXP);
             }
             fb.classList.add('show');
@@ -3764,8 +3832,6 @@
             }
 
             document.getElementById('safetyLevelName').textContent = SAFETY_LEVELS[lv].name;
-            const stars = '★'.repeat(SAFETY_LEVELS[lv].stars) + '☆'.repeat(5 - SAFETY_LEVELS[lv].stars);
-            document.getElementById('safetyLevelStars').textContent = stars;
 
             document.getElementById('safetyHazard').textContent = `Hazard: ${config.hazard}`;
             const riskEl = document.getElementById('safetyRiskRating');
@@ -3801,7 +3867,7 @@
             document.getElementById('safetySubmitBtn').disabled = false;
 
             document.getElementById('codeGameLevel').textContent = 'Level ' + SAFETY_LEVELS[state.code.level].id;
-            document.getElementById('codeGameStars').textContent = stars;
+            resetHearts('codeGameStars');
             startTimer('codeGameTimer');
             document.getElementById('codeFeedback').classList.remove('show');
             document.getElementById('codeFbNext').style.display = 'none';
@@ -3849,6 +3915,7 @@
             } else {
                 // Generic error message - NO hints about which items are wrong
                 fb.textContent = '❌ Incorrect selection. Please review the hazard and try again.';
+                if (loseHeart()) showOutOfHearts('code', 'codeFeedback', 'code');
                 fb.className = 'safety-feedback-text error';
 
                 // DO NOT highlight any items as correct or wrong
@@ -3876,11 +3943,12 @@
                 document.getElementById('codeFbSub').textContent =
                 'Great safety knowledge! You selected the correct PPE.';
                 document.getElementById('codeFbScore').innerHTML =
-                    `<div class="row"><span class="label">Time Bonus</span><span>+${Math.max(0, 60 - state.seconds)} XP</span></div><div class="row"><span class="label">Accuracy Bonus</span><span>+30 XP</span></div><div class="row"><span class="label">TOTAL XP</span><span class="text-glow" style="color:#f5a623;">${xp + 30} XP</span></div>`;
+                    `<div class="row"><span class="label">Hearts Left</span><span class="hearts-row">${heartsStr()}</span></div><div class="row"><span class="label">Time Bonus</span><span>+${Math.max(0, 60 - state.seconds)} XP</span></div><div class="row"><span class="label">Accuracy Bonus</span><span>+30 XP</span></div><div class="row"><span class="label">TOTAL XP</span><span class="text-glow" style="color:#f5a623;">${xp + 30} XP</span></div>`;
                 document.getElementById('codeFbNext').style.display = (state.code.level < SAFETY_LEVELS.length -
                     1) ? '' : 'none';
                 document.getElementById('codeFbReplay').textContent = '↻ REPLAY';
                 updateMainMenu();
+                keepHearts('code', SAFETY_LEVELS[lv].id);
                 notifyEimProgress('code', SAFETY_LEVELS, xp + 30);
             }
             fb.classList.add('show');
