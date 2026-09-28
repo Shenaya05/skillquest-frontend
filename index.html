@@ -1607,16 +1607,18 @@
         </div>
     </div>
 
-    <!-- ══════ LOGOUT CONFIRMATION MODAL ══════ -->
-    <div class="modal-overlay" id="logout-modal">
-        <div class="modal">
-            <button class="modal-close" onclick="closeModal('logout-modal')">✕</button>
-            <div class="modal-icon">🚪</div>
-            <h2>Log Out?</h2>
-            <p>Are you sure you want to log out? Your progress is already saved to your account.</p>
-            <div class="confirm-actions">
-                <button class="btn btn-secondary" onclick="closeModal('logout-modal')">No</button>
-                <button class="btn btn-danger" onclick="doLogout()">Yes, Log Out</button>
+    <!-- ══════ LOGOUT CONFIRMATION MODAL (inline styles = always shows) ══════ -->
+    <div id="logout-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.75); z-index:9999; align-items:center; justify-content:center; padding:20px;">
+        <div style="background:var(--panel); border:1px solid var(--border); border-radius:16px; padding:36px; max-width:420px; width:100%; text-align:center; position:relative;">
+            <button style="position:absolute; top:16px; right:16px; background:var(--card); border:none; color:var(--muted); width:32px; height:32px; border-radius:50%; cursor:pointer; font-size:16px; display:flex; align-items:center; justify-content:center;" onclick="closeLogoutModal()">✕</button>
+            <div style="font-size:64px; margin-bottom:12px;">🚪</div>
+            <h2 style="font-family:'Rajdhani',sans-serif; font-size:28px; font-weight:700; margin-bottom:8px; color:var(--text);">Log Out?</h2>
+            <p style="color:var(--muted); font-size:14px; margin-bottom:24px; line-height:1.6;">
+                Are you sure you want to log out? Your progress is already saved to your account.
+            </p>
+            <div style="display:flex; gap:12px; justify-content:center;">
+                <button class="btn btn-secondary" style="flex:1; max-width:160px; padding:12px 20px; font-size:16px;" onclick="closeLogoutModal()">No</button>
+                <button class="btn btn-danger" style="flex:1; max-width:160px; padding:12px 20px; font-size:16px;" onclick="doLogout()">Yes, Log Out</button>
             </div>
         </div>
     </div>
@@ -2130,14 +2132,19 @@
             }
         }
 
-        // ✅ Opens confirmation modal instead of logging out directly
+        // ✅ Opens the logout confirmation modal
         function confirmLogout() {
-            openModal('logout-modal');
+            document.getElementById('logout-modal').style.display = 'flex';
         }
 
-        // ✅ Called only when user clicks "Yes, Log Out"
+        // ✅ Closes the logout confirmation modal
+        function closeLogoutModal() {
+            document.getElementById('logout-modal').style.display = 'none';
+        }
+
+        // ✅ Actually logs out (only called when user clicks "Yes, Log Out")
         function doLogout() {
-            closeModal('logout-modal');
+            document.getElementById('logout-modal').style.display = 'none';
             clearInterval(quizTimer);
             clearSession();
             state = null;
