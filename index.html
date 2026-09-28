@@ -166,6 +166,15 @@
             background: var(--accent2);
             color: #0d0f1a;
         }
+        .btn-danger {
+            background: linear-gradient(135deg, var(--accent4), #b91c1c);
+            color: #fff;
+            box-shadow: 0 4px 20px rgba(239, 68, 68, .3);
+        }
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 32px rgba(239, 68, 68, .45);
+        }
         .btn:disabled {
             opacity: .4;
             cursor: not-allowed;
@@ -1293,6 +1302,20 @@
             justify-content: center;
         }
 
+        /* ── confirm dialog (logout) ── */
+        .confirm-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-top: 8px;
+        }
+        .confirm-actions .btn {
+            flex: 1;
+            max-width: 160px;
+            padding: 12px 20px;
+            font-size: 16px;
+        }
+
         .toast {
             position: fixed;
             bottom: 24px;
@@ -1479,7 +1502,7 @@
                     <span class="lv-label">LVL</span>
                     <span class="lv-num" id="hud-level">1</span>
                 </div>
-                <button class="btn btn-secondary" style="padding:8px 14px;font-size:13px;" onclick="logout()" title="Log out (progress is saved to your account)">⎋ Log Out</button>
+                <button class="btn btn-secondary" style="padding:8px 14px;font-size:13px;" onclick="confirmLogout()" title="Log out (progress is saved to your account)">⎋ Log Out</button>
             </div>
         </div>
         <div class="nav-tabs">
@@ -1501,7 +1524,7 @@
                     <div class="player-name-tag" id="trainer-hud-name">Trainer</div>
                     <div class="player-track-tag">Trainer View</div>
                 </div>
-                <button class="btn btn-secondary" style="padding:8px 14px;font-size:13px;" onclick="logout()">⎋ Log Out</button>
+                <button class="btn btn-secondary" style="padding:8px 14px;font-size:13px;" onclick="confirmLogout()">⎋ Log Out</button>
             </div>
         </div>
         <div class="main-content" id="trainer-content" style="padding:24px;"></div>
@@ -1581,6 +1604,20 @@
             <h2>Badge Earned!</h2>
             <p id="badge-modal-msg">You earned the First Steps badge!</p>
             <button class="btn btn-primary" style="width:100%;" onclick="closeModal('badge-modal')">Collect 🎖</button>
+        </div>
+    </div>
+
+    <!-- ══════ LOGOUT CONFIRMATION MODAL ══════ -->
+    <div class="modal-overlay" id="logout-modal">
+        <div class="modal">
+            <button class="modal-close" onclick="closeModal('logout-modal')">✕</button>
+            <div class="modal-icon">🚪</div>
+            <h2>Log Out?</h2>
+            <p>Are you sure you want to log out? Your progress is already saved to your account.</p>
+            <div class="confirm-actions">
+                <button class="btn btn-secondary" onclick="closeModal('logout-modal')">No</button>
+                <button class="btn btn-danger" onclick="doLogout()">Yes, Log Out</button>
+            </div>
         </div>
     </div>
 
@@ -1951,7 +1988,7 @@
         let state = null;
         let quizState = null;
         let quizTimer = null;
-        let previousTab = 'dashboard'; // ← remembers tab before entering game/quiz
+        let previousTab = 'dashboard';
 
         function initState(track, name, id) {
             return {
@@ -2093,7 +2130,14 @@
             }
         }
 
-        function logout() {
+        // ✅ Opens confirmation modal instead of logging out directly
+        function confirmLogout() {
+            openModal('logout-modal');
+        }
+
+        // ✅ Called only when user clicks "Yes, Log Out"
+        function doLogout() {
+            closeModal('logout-modal');
             clearInterval(quizTimer);
             clearSession();
             state = null;
@@ -2412,7 +2456,6 @@
             else if (tab === 'leaderboard') renderLeaderboard(content);
         }
 
-        // Helper: figure out which tab is currently active
         function getCurrentTabName() {
             const activeTab = document.querySelector('.nav-tab.active');
             if (!activeTab) return 'dashboard';
@@ -2776,7 +2819,6 @@
         const gameProgress = {};
 
         function startGameModule(moduleId) {
-            // ✅ Remember which tab we came from so we can return to it on exit
             previousTab = getCurrentTabName();
 
             const module = Object.values(COMPETENCY_MODULES).flat().find(m => m.id === moduleId);
@@ -2920,7 +2962,6 @@
             showMain();
         }
 
-        // ✅ Returns to whatever tab the user was on before entering the game/quiz
         function showMain() {
             showScreen('main');
             updateHUD();
