@@ -1110,6 +1110,16 @@
             cursor: help;
             color: var(--gold);
         }
+
+        /* ─── HEARTS (lives) ─── */
+        [id$="GameStars"], #liveGameHearts, #safetyLevelStars, .level-card .stars, .level-card.completed .stars {
+            color: #ff4d6d !important;
+            text-shadow: 0 0 10px rgba(255, 77, 109, 0.45) !important;
+            letter-spacing: 2px;
+        }
+        .hearts-row { color: #ff4d6d; letter-spacing: 2px; }
+        @keyframes heartHit { 0% { transform: scale(1); } 30% { transform: scale(1.35); } 100% { transform: scale(1); } }
+        .heart-hit { display: inline-block; animation: heartHit 0.4s; }
     </style>
 </head>
 <body>
@@ -1206,7 +1216,7 @@
             <div id="ohs-game" style="display:none;">
                 <div class="game-header">
                     <span class="level-tag" id="ohsGameLevel">Level 1</span>
-                    <span class="stars-display" id="ohsGameStars">★★★★★</span>
+                    <span class="stars-display" id="ohsGameStars">♥♥♥♥♥</span>
                     <span class="timer" id="ohsGameTimer">00:00</span>
                     <button class="glossary-btn" data-glossary="ohs">📖</button>
                 </div>
@@ -1250,7 +1260,7 @@
             <div id="os-game" style="display:none;">
                 <div class="game-header">
                     <span class="level-tag" id="osGameLevel">Level 1</span>
-                    <span class="stars-display" id="osGameStars">★★★★★</span>
+                    <span class="stars-display" id="osGameStars">♥♥♥♥♥</span>
                     <span class="timer" id="osGameTimer">00:00</span>
                     <button class="glossary-btn" data-glossary="os">📖</button>
                 </div>
@@ -1294,7 +1304,7 @@
             <div id="typing-game" style="display:none;">
                 <div class="game-header">
                     <span class="level-tag" id="typingGameLevel">Level 1</span>
-                    <span class="stars-display" id="typingGameStars">★★★★★</span>
+                    <span class="stars-display" id="typingGameStars">♥♥♥♥♥</span>
                     <span class="timer" id="typingGameTimer">00:00</span>
                     <button class="glossary-btn" data-glossary="typing">📖</button>
                 </div>
@@ -1338,7 +1348,7 @@
             <div id="spreadsheet-game" style="display:none;">
                 <div class="game-header">
                     <span class="level-tag" id="spreadsheetGameLevel">Level 1</span>
-                    <span class="stars-display" id="spreadsheetGameStars">★★★★★</span>
+                    <span class="stars-display" id="spreadsheetGameStars">♥♥♥♥♥</span>
                     <span class="timer" id="spreadsheetGameTimer">00:00</span>
                     <button class="glossary-btn" data-glossary="spreadsheet">📖</button>
                 </div>
@@ -1382,7 +1392,7 @@
             <div id="maintenance-game" style="display:none;">
                 <div class="game-header">
                     <span class="level-tag" id="maintenanceGameLevel">Level 1</span>
-                    <span class="stars-display" id="maintenanceGameStars">★★★★★</span>
+                    <span class="stars-display" id="maintenanceGameStars">♥♥♥♥♥</span>
                     <span class="timer" id="maintenanceGameTimer">00:00</span>
                     <button class="glossary-btn" data-glossary="maintenance">📖</button>
                 </div>
@@ -1426,6 +1436,52 @@
         // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
         // STATE
         // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        // ♥ HEARTS — 5 lives per level; hearts left on a clear = the score basis
+        const MAX_HEARTS = 5;
+        const hearts = { cur: MAX_HEARTS, best: {} };
+        let heartsHeaderId = null;
+        let heartsFresh = false;
+        function heartsStr(n) { n = (n === undefined) ? hearts.cur : n; return '♥'.repeat(n) + '♡'.repeat(MAX_HEARTS - n); }
+        function paintHearts() {
+            const el = heartsHeaderId && document.getElementById(heartsHeaderId);
+            if (el) el.textContent = heartsStr();
+            const s = document.getElementById('safetyLevelStars');
+            if (s) s.textContent = heartsStr();
+        }
+        function resetHearts(headerId) { hearts.cur = MAX_HEARTS; heartsHeaderId = headerId; heartsFresh = false; paintHearts(); }
+        function syncHearts(headerId) { if (heartsFresh) resetHearts(headerId); else { heartsHeaderId = headerId; paintHearts(); } }
+        function loseHeart() {
+            if (hearts.cur > 0) hearts.cur--;
+            paintHearts();
+            const el = heartsHeaderId && document.getElementById(heartsHeaderId);
+            if (el) { el.classList.remove('heart-hit'); void el.offsetWidth; el.classList.add('heart-hit'); }
+            return hearts.cur === 0;
+        }
+        function keepHearts(game, levelId) { const k = game + ':' + levelId; hearts.best[k] = Math.max(hearts.best[k] || 0, hearts.cur); }
+        function levelHeartsStr(game, levelId, done) { return heartsStr(done ? (hearts.best[game + ':' + levelId] || 0) : 0); }
+        function heartsSummary(game, levelIds, completed) {
+            const earned = levelIds.reduce((s, id) => s + (completed.has(id) ? (hearts.best[game + ':' + id] || 0) : 0), 0);
+            const max = levelIds.length * MAX_HEARTS;
+            return { earned, max, pct: max ? Math.round(earned / max * 100) : 0 };
+        }
+        function showOutOfHearts(game, overlayId, p, hideScore) {
+            stopTimer();
+            if (state[game] && 'problem' in state[game]) state[game].problem = 0;
+            const g = id => document.getElementById(p + id);
+            g('FbIcon').textContent = '💔';
+            g('FbTitle').textContent = 'Out of Hearts!';
+            g('FbTitle').className = 'fb-title red';
+            g('FbSub').textContent = 'You lost all ' + MAX_HEARTS + ' hearts. Retry the level!';
+            const sc = g('FbScore');
+            if (sc) {
+                if (hideScore) sc.style.display = 'none';
+                else sc.innerHTML = '<div class="row"><span class="label">Hearts Left</span><span class="hearts-row">' + heartsStr() + '</span></div>';
+            }
+            const nx = g('FbNext'); if (nx) nx.style.display = 'none';
+            const rp = g('FbReplay'); if (rp) { rp.style.display = ''; rp.textContent = '↻ RETRY LEVEL'; }
+            document.getElementById(overlayId).classList.add('show');
+        }
+
         const state = {
             ohs: { level: 0, completed: new Set() },
             os: { level: 0, completed: new Set() },
@@ -2053,7 +2109,7 @@
                 if (isActive) div.classList.add('active');
                 if (idx > current + 1) div.classList.add('locked');
                 div.innerHTML =
-                    `<div class="num">${idx+1}</div><div class="name">${lv.name}</div><div class="stars">${isDone ? '★★★★★' : '☆☆☆☆☆'}</div>`;
+                    `<div class="num">${idx+1}</div><div class="name">${lv.name}</div><div class="stars">${levelHeartsStr(container.id.replace('LevelGrid', ''), idx + 1, isDone)}</div>`;
                 if (idx <= current + 1 && !isDone) {
                     div.style.cursor = 'pointer';
                     div.addEventListener('click', () => {
@@ -2633,6 +2689,7 @@
                 currentGame.feedbackEl.textContent = `❌ Wrong. Expected "${expected}"`;
                 currentGame.feedbackEl.className = 'game-feedback error';
                 setTimeout(() => el.classList.remove('wrong'), 800);
+                if (loseHeart()) finishLevel(currentGame.moduleId);
             }
         }
 
@@ -2655,7 +2712,8 @@
                 currentGame.feedbackEl.textContent = `❌ Incorrect. The correct answer was: "${q.options[correct]}"`;
                 currentGame.feedbackEl.className = 'game-feedback error';
                 area.dataset.choiceAnswered = 'true';
-                setTimeout(() => { currentGame.nextBtn.disabled = false; }, 500);
+                if (loseHeart()) finishLevel(currentGame.moduleId);
+                else setTimeout(() => { currentGame.nextBtn.disabled = false; }, 500);
             }
         }
 
@@ -2699,7 +2757,7 @@
             });
 
             document.getElementById(moduleId + 'GameLevel').textContent = 'Level ' + (lv + 1);
-            document.getElementById(moduleId + 'GameStars').textContent = '★★★★★';
+            resetHearts(moduleId + 'GameStars');
             startTimer(moduleId + 'GameTimer');
             document.getElementById(moduleId + 'FeedbackOverlay').classList.remove('show');
 
@@ -2781,6 +2839,7 @@
             }
 
             currentGame.answers.push(correct);
+            if (!correct && q.type === 'dragdrop' && loseHeart()) { finishLevel(moduleId); return; }
 
             if (currentGame.currentQ < currentGame.questions.length - 1) {
                 currentGame.currentQ++;
@@ -2791,6 +2850,20 @@
             }
         }
 
+        function notifyPcOpsProgress(game, earnedXP) {
+            try {
+                const completed = state[game].completed.size;
+                const total = MODULE_LEVELS[game].length;
+                const hs = heartsSummary(game, MODULE_LEVELS[game].map((_, i) => i + 1), state[game].completed);
+                (window.parent || window).postMessage({
+                    type: 'PC_OPS_PROGRESS', game, completed, total, pct: hs.pct,
+                    earnedXP: earnedXP || 0,
+                    heartsLeft: hearts.cur, heartsEarned: hs.earned, heartsMax: hs.max,
+                    moduleComplete: completed >= total
+                }, '*');
+            } catch (e) { /* standalone mode */ }
+        }
+
         function finishLevel(moduleId) {
             if (currentGame.isComplete) return;
             currentGame.isComplete = true;
@@ -2798,15 +2871,17 @@
 
             const correctCount = currentGame.answers.filter(a => a).length;
             const total = currentGame.answers.length;
-            const allCorrect = (correctCount === total);
+            const allCorrect = hearts.cur > 0; // pass = survived with hearts left
 
             if (allCorrect) {
                 const lv = state[moduleId].level;
                 state[moduleId].completed.add(lv + 1);
+                keepHearts(moduleId, lv + 1);
                 updateMainMenu();
             }
 
             const xp = 20 + correctCount * 10 + Math.max(0, 60 - state.seconds) * 0.5;
+            if (allCorrect) notifyPcOpsProgress(moduleId, Math.round(xp));
             const overlay = document.getElementById(moduleId + 'FeedbackOverlay');
 
             if (allCorrect) {
@@ -2815,17 +2890,17 @@
                 document.getElementById(moduleId + 'FbTitle').className = 'fb-title gold';
                 document.getElementById(moduleId + 'FbSub').textContent = `You got ${correctCount}/${total} correct!`;
                 document.getElementById(moduleId + 'FbScore').innerHTML =
-                    `<div class="row"><span class="label">Time Bonus</span><span>+${Math.max(0, 60 - state.seconds)} XP</span></div><div class="row"><span class="label">Accuracy Bonus</span><span>+${correctCount * 10} XP</span></div><div class="row"><span class="label">TOTAL XP</span><span class="text-glow" style="color:#f5a623;">${Math.round(xp)} XP</span></div>`;
+                    `<div class="row"><span class="label">Hearts Left</span><span class="hearts-row">${heartsStr()}</span></div><div class="row"><span class="label">Time Bonus</span><span>+${Math.max(0, 60 - state.seconds)} XP</span></div><div class="row"><span class="label">Accuracy Bonus</span><span>+${correctCount * 10} XP</span></div><div class="row"><span class="label">TOTAL XP</span><span class="text-glow" style="color:#f5a623;">${Math.round(xp)} XP</span></div>`;
                 document.getElementById(moduleId + 'FbNext').style.display = (state[moduleId].level < MODULE_LEVELS[
                     moduleId].length - 1) ? '' : 'none';
                 document.getElementById(moduleId + 'FbReplay').textContent = '↻ REPLAY';
             } else {
-                document.getElementById(moduleId + 'FbIcon').textContent = '💪';
-                document.getElementById(moduleId + 'FbTitle').textContent = 'Keep Trying!';
+                document.getElementById(moduleId + 'FbIcon').textContent = '💔';
+                document.getElementById(moduleId + 'FbTitle').textContent = 'Out of Hearts!';
                 document.getElementById(moduleId + 'FbTitle').className = 'fb-title gold';
-                document.getElementById(moduleId + 'FbSub').textContent = `You got ${correctCount}/${total} correct. Need all correct to pass.`;
+                document.getElementById(moduleId + 'FbSub').textContent = `You lost all ${MAX_HEARTS} hearts (${correctCount}/${total} correct). Retry the level!`;
                 document.getElementById(moduleId + 'FbScore').innerHTML =
-                    `<div class="row"><span class="label">Score</span><span>${correctCount}/${total}</span></div>`;
+                    `<div class="row"><span class="label">Hearts Left</span><span class="hearts-row">${heartsStr()}</span></div><div class="row"><span class="label">Score</span><span>${correctCount}/${total}</span></div>`;
                 document.getElementById(moduleId + 'FbNext').style.display = 'none';
                 document.getElementById(moduleId + 'FbReplay').textContent = '↻ RETRY';
             }
@@ -2873,8 +2948,17 @@
             // Already done above
         });
 
-        showScreen('screen-main');
-        updateMainMenu();
+        // Embedded mode: SkillQuest dashboard opens a single module and receives progress back
+        const PC_PARAMS = new URLSearchParams(window.location.search);
+        const PC_AUTOSTART = PC_PARAMS.get('game');
+        if (PC_PARAMS.get('embed') === '1' && MODULE_LEVELS[PC_AUTOSTART]) {
+            initModule(PC_AUTOSTART);
+            showScreen('screen-' + PC_AUTOSTART);
+            try { (window.parent || window).postMessage({ type: 'EIM_GAME_READY', game: PC_AUTOSTART }, '*'); } catch (e) {}
+        } else {
+            showScreen('screen-main');
+            updateMainMenu();
+        }
         console.log('💻 PC Ops Interactive – Icons, glossary, and acronym tooltips added!');
     </script>
 </body>
