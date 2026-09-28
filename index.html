@@ -1802,16 +1802,6 @@
                 totalLevels: 5,
                 moduleId: 'ccs_storm'
             }, {
-                id: 'ccs_speed',
-                name: 'System Speed',
-                icon: '⚡',
-                desc: 'CRM data entry and tickets.',
-                type: 'game',
-                gameFile: 'ccs-game.html',
-                gameMode: 'speed',
-                totalLevels: 5,
-                moduleId: 'ccs_speed'
-            }, {
                 id: 'ccs_quality',
                 name: 'Quality Quest',
                 icon: '⭐',
@@ -1923,8 +1913,6 @@
                     condition: (s) => (s.modules['ccs_script']?.lastPct || 0) >= 70 },
                 { id: 'badge_ccs_storm', icon: '🌊', name: 'Storm Calmer', desc: 'Pass CCS Calm the Storm (≥70%).',
                     condition: (s) => (s.modules['ccs_storm']?.lastPct || 0) >= 70 },
-                { id: 'badge_ccs_speed', icon: '⚡', name: 'Speed Demon', desc: 'Pass CCS System Speed (≥70%).',
-                    condition: (s) => (s.modules['ccs_speed']?.lastPct || 0) >= 70 },
                 { id: 'badge_ccs_quality', icon: '⭐', name: 'Quality Star', desc: 'Pass CCS Quality Quest (≥70%).',
                     condition: (s) => (s.modules['ccs_quality']?.lastPct || 0) >= 70 },
                 { id: 'badge_ccs_live', icon: '🎙️', name: 'Call Hero', desc: 'Pass CCS The Live Call (≥70%).',
@@ -1994,9 +1982,6 @@
         // ══════════════════════════════════════════
         // BACKEND API
         // ══════════════════════════════════════════
-        // ── After you deploy the backend (see server/README.md), replace the
-        // localhost URL below with your live URL, e.g.:
-        //   'https://skillquest-api-xxxx.onrender.com/api'
        const API_BASE = window.SKILLQUEST_API_BASE || 'https://skillquest-api-llyp.onrender.com/api'; 
 
         let authToken = null;
@@ -2043,9 +2028,7 @@
 
         function progressToState(user, p) {
             const actualTrack = localStorage.getItem('skillquest_actual_track');
-            // FIX: Determine the correct track display name
             let track = user.track;
-            // If the user selected pcops during registration or login, use pcops as the display track
             if (actualTrack === 'pcops' || (user.track === 'ccs' && actualTrack === 'pcops')) {
                 track = 'pcops';
             }
@@ -2067,7 +2050,6 @@
         }
 
         function stateToProgressBody() {
-            // FIX: When saving, store the backend-compatible track
             const backendTrack = state.track === 'pcops' ? 'ccs' : state.track;
             return {
                 xp: state.xp,
@@ -2102,7 +2084,6 @@
                 if (currentUser.role === 'trainee') {
                     const p = await apiCall('/progress');
                     state = progressToState(currentUser, p);
-                    // FIX: If the actual track is pcops, update the user object for display
                     const actualTrack = localStorage.getItem('skillquest_actual_track');
                     if (actualTrack === 'pcops') {
                         currentUser.track = 'pcops';
@@ -2277,8 +2258,6 @@
             if (!name) return showFormError('reg-error', 'Please enter your full name');
             if (role === 'trainee' && !actualTrack) return showFormError('reg-error', 'Please select your NC track');
 
-            // FIX: Always send the actual track to the backend
-            // The backend should support 'eim', 'ccs', and 'pcops' as valid tracks
             let backendTrack = actualTrack;
 
             const btn = document.getElementById('reg-submit-btn');
@@ -2289,7 +2268,6 @@
                 const data = await apiCall('/auth/register', { method: 'POST', body, auth: false });
                 authToken = data.token;
                 currentUser = data.user;
-                // Ensure the user object has the correct track
                 currentUser.track = actualTrack;
                 saveSession();
                 if (role === 'trainee') {
@@ -2305,7 +2283,6 @@
                         passedInTrack: 0,
                         history: [],
                     });
-                    // FIX: Ensure state.track is the actual track
                     state.track = actualTrack;
                     updateHUD();
                     showScreen('main');
@@ -2335,13 +2312,11 @@
                 saveSession();
                 if (currentUser.role === 'trainee') {
                     const p = await apiCall('/progress');
-                    // FIX: Get the actual track from the stored session
                     const actualTrack = localStorage.getItem('skillquest_actual_track');
                     if (actualTrack === 'pcops') {
                         currentUser.track = 'pcops';
                     }
                     state = progressToState(currentUser, p);
-                    // FIX: Ensure state.track is correct
                     if (actualTrack === 'pcops') {
                         state.track = 'pcops';
                     }
@@ -2814,11 +2789,9 @@
             badge.style.border = `1px solid ${TRACKS[track]?.color || '#a855f7'}`;
             document.getElementById('gm-progress-text').textContent = 'Loading game...';
 
-            // Load the appropriate game file with module parameters
             const iframe = document.getElementById('gm-iframe');
             let gameFile = module.gameFile || 'eim-game.html';
 
-            // Add query parameters for the game mode
             let url = gameFile;
             const params = new URLSearchParams();
             params.set('embed', '1');
@@ -2830,7 +2803,6 @@
 
             iframe.src = url;
 
-            // Reset progress tracking
             const prev = state.modules[module.id];
             gameProgress[module.id] = prev ?
                 { completed: Math.round((prev.lastPct / 100) * module.totalLevels), total: module.totalLevels,
@@ -2844,7 +2816,6 @@
         window.addEventListener('message', (e) => {
             const data = e.data;
             if (!data || !currentGameModule) {
-                // Check if it's a module complete message without currentGameModule
                 if (data && data.type === 'MODULE_COMPLETE' && data.moduleId) {
                     handleModuleComplete(data.moduleId, data.pct, data.xpEarned || 0);
                 }
@@ -2853,7 +2824,6 @@
 
             const moduleId = currentGameModule.id;
 
-            // Handle progress updates from game modules
             if (data.type === 'PROGRESS_UPDATE' || data.type === 'EIM_MODULE_PROGRESS' ||
                 data.type === 'CCS_MODULE_PROGRESS' || data.type === 'PC_OPS_PROGRESS') {
 
@@ -2879,17 +2849,14 @@
                 }
             }
 
-            // Handle module complete directly
             if (data.type === 'MODULE_COMPLETE') {
                 handleModuleComplete(data.moduleId || moduleId, data.pct || 0, data.xpEarned || 0);
             }
 
-            // Handle exit
             if (data.type === 'EIM_EXIT' || data.type === 'EXIT_MODULE') {
                 exitGameModule();
             }
 
-            // Handle game ready
             if (data.type === 'CSS_GAME_READY' || data.type === 'EIM_GAME_READY') {
                 document.getElementById('gm-progress-text').textContent =
                     `Game ready! Complete all ${currentGameModule.totalLevels} levels.`;
@@ -2929,7 +2896,6 @@
 
         function exitGameModule() {
             if (currentGameModule) {
-                // Check if there's any progress to save
                 const moduleId = currentGameModule.id;
                 const prog = gameProgress[moduleId];
                 if (prog && prog.completed > 0 && prog.pct > 0) {
