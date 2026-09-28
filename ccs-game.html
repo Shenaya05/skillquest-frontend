@@ -758,47 +758,6 @@
             border: 1px solid rgba(0, 180, 255, 0.2);
         }
 
-        /* ─── SYSTEM SPEED (CRM) ─── */
-        .ticket-board {
-            background: rgba(15, 23, 32, 0.6);
-            backdrop-filter: blur(4px);
-            border-radius: 16px;
-            padding: 14px;
-            margin: 4px 0 8px;
-            border: 2px solid rgba(255, 255, 255, 0.04);
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
-        }
-        .ticket-board .ticket-field {
-            background: rgba(26, 35, 48, 0.4);
-            border-radius: 10px;
-            padding: 8px 12px;
-            font-size: 12px;
-            font-weight: 600;
-            color: #8a9bb0;
-            display: flex;
-            flex-direction: column;
-            gap: 2px;
-        }
-        .ticket-board .ticket-field .field-label {
-            font-size: 8px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            color: #5a6a80;
-        }
-        .ticket-board .ticket-field .field-value {
-            font-size: 13px;
-            font-weight: 700;
-            color: #f0f4fa;
-        }
-        .ticket-board .ticket-field .field-value.missing {
-            color: #ff1744;
-        }
-        .ticket-board .ticket-field .field-value.filled {
-            color: #00c853;
-        }
-
         /* ─── QUALITY QUEST ─── */
         .qa-question {
             background: rgba(26, 35, 48, 0.6);
@@ -982,14 +941,6 @@
             .scenario-box .scenario-text {
                 font-size: 14px;
             }
-            .ticket-board {
-                grid-template-columns: 1fr 1fr;
-                gap: 6px;
-            }
-            .ticket-board .ticket-field {
-                padding: 6px 10px;
-                font-size: 11px;
-            }
             .btn {
                 font-size: 13px;
                 padding: 12px 16px;
@@ -1004,12 +955,6 @@
             .qa-question .q-options .opt-btn {
                 font-size: 12px;
                 padding: 8px 12px;
-            }
-        }
-
-        @media (min-width: 401px) {
-            .ticket-board {
-                grid-template-columns: 1fr 1fr 1fr;
             }
         }
     </style>
@@ -1038,14 +983,6 @@
                     <div class="info">
                         <div class="name">Calm the Storm <span class="badge">Lv.1</span></div>
                         <div class="desc">De‑escalation &amp; empathy</div>
-                    </div>
-                    <div class="arrow">›</div>
-                </div>
-                <div class="menu-item" data-game="speed" id="menu-speed">
-                    <div class="icon">⚡</div>
-                    <div class="info">
-                        <div class="name">System Speed <span class="badge">Lv.1</span></div>
-                        <div class="desc">CRM data entry &amp; tickets</div>
                     </div>
                     <div class="arrow">›</div>
                 </div>
@@ -1168,49 +1105,6 @@
                 <div style="display:flex;gap:10px;width:100%;max-width:280px;">
                     <button class="btn btn-secondary" id="stormFbReplay">↻ REPLAY</button>
                     <button class="btn btn-primary" id="stormFbNext">➜ NEXT LEVEL</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- ===== SCREEN: SYSTEM SPEED ===== -->
-        <div id="screen-speed" class="screen">
-            <div class="back-row">
-                <button class="back-btn" data-back="main">‹</button>
-                <span class="heading" style="font-size:17px;">⚡ System Speed</span>
-            </div>
-            <div id="speed-select">
-                <div class="subheading">Select Level</div>
-                <div class="level-grid" id="speedLevelGrid"></div>
-                <button class="btn btn-primary" id="speedStartBtn">START LEVEL</button>
-            </div>
-            <div id="speed-instructions" style="display:none;">
-                <div class="instructions-box">
-                    <div class="obj" id="speedInstrObj">⚡ CRM Ticket Entry</div>
-                    <div class="detail" id="speedInstrDetail">Complete the ticket fields with the correct data. 4 problems per level.</div>
-                    <div class="rule">Read the customer info</div>
-                    <div class="rule">Fill in the missing fields</div>
-                    <div class="rule">Tap CHECK to verify</div>
-                </div>
-                <button class="btn btn-primary" id="speedPlayBtn">▶ PLAY</button>
-            </div>
-            <div id="speed-game" style="display:none;">
-                <div class="game-header">
-                    <span class="level-tag" id="speedGameLevel">Level 1</span>
-                    <span class="stars-display" id="speedGameStars">★★★★★</span>
-                    <span class="timer" id="speedGameTimer">00:00</span>
-                </div>
-                <div class="ticket-board" id="speedBoard"></div>
-                <div class="drag-zone" id="speedDragZone"><span style="color:#5a6a80;font-size:13px;">⬇ Drag values here ⬇</span></div>
-                <button class="btn btn-primary" id="speedCheckBtn" style="margin-top:8px;">✅ CHECK TICKET</button>
-            </div>
-            <div class="feedback-overlay" id="speedFeedback">
-                <div class="big-icon" id="speedFbIcon">🎉</div>
-                <div class="fb-title gold" id="speedFbTitle">Ticket Complete!</div>
-                <div class="fb-sub" id="speedFbSub">Accurate and fast data entry!</div>
-                <div class="fb-score" id="speedFbScore"><div class="row"><span class="label">TOTAL XP</span><span class="text-glow" style="color:#00b4ff;">75 XP</span></div></div>
-                <div style="display:flex;gap:10px;width:100%;max-width:280px;">
-                    <button class="btn btn-secondary" id="speedFbReplay">↻ REPLAY</button>
-                    <button class="btn btn-primary" id="speedFbNext">➜ NEXT LEVEL</button>
                 </div>
             </div>
         </div>
@@ -1344,7 +1238,6 @@
         const state = {
             script: { level: 0, problem: 0, completed: new Set() },
             storm: { level: 0, problem: 0, completed: new Set() },
-            speed: { level: 0, problem: 0, completed: new Set() },
             quality: { level: 0, problem: 0, completed: new Set() },
             live: { level: 0, problem: 0, scenario: 0, turn: 0, completed: new Set() },
             timerInterval: null,
@@ -1437,48 +1330,6 @@
                 { scenario: 'A customer is escalating because multiple agents couldn\'t solve their complex problem.', options: ['I understand how frustrating this must be. I am a senior agent and I will personally own this case.', 'Let me transfer you to another department.', 'I\'ll try to help but no promises.', 'You might need to speak with a manager.'], correct: 0, feedback: '✅ Exceptional! You showed empathy, authority, and commitment — exactly what they needed.' },
                 { scenario: 'A long-time customer threatens to cancel after a series of repeated issues.', options: ['I completely understand your frustration after everything you\'ve been through — let me make this right.', 'We\'re sorry to see you go, I\'ll process the cancellation.', 'These things happen with any provider.', 'I\'ll transfer you to retention.'], correct: 0, feedback: '✅ Correct! Owning the history and committing to fix it shows real accountability.' },
                 { scenario: 'A customer\'s issue involves two departments pointing fingers at each other.', options: ['I\'ll take ownership of coordinating between both teams so you don\'t have to.', 'That\'s between those two departments, not me.', 'You\'ll need to call each department separately.', 'I can\'t do anything about interdepartmental issues.'], correct: 0, feedback: '✅ Correct! Taking end-to-end ownership is exactly what a complex escalation needs.' },
-            ],
-        ];
-
-        // System Speed Levels (fill-in CRM ticket fields)
-        const SPEED_LEVELS = [
-            { id: 1, name: 'Basic Data', stars: 4 },
-            { id: 2, name: 'Customer Info', stars: 4 },
-            { id: 3, name: 'Issue Details', stars: 4 },
-            { id: 4, name: 'Ticket Complete', stars: 4 },
-            { id: 5, name: 'Speed Run', stars: 5 },
-        ];
-
-        const SPEED_DATA = [
-            [ // Level 1: Basic Data
-                { fields: [ { label: 'Ticket ID', value: 'T-1001', filled: true }, { label: 'Customer', value: '____', filled: false, correct: 'Jane Doe' }, { label: 'Issue', value: '____', filled: false, correct: 'Billing error' }, { label: 'Priority', value: '____', filled: false, correct: 'High' } ], options: ['Jane Doe', 'Billing error', 'High'] },
-                { fields: [ { label: 'Ticket ID', value: 'T-1006', filled: true }, { label: 'Customer', value: '____', filled: false, correct: 'Mark Villar' }, { label: 'Issue', value: '____', filled: false, correct: 'Duplicate charge' }, { label: 'Priority', value: '____', filled: false, correct: 'Medium' } ], options: ['Mark Villar', 'Duplicate charge', 'Medium'] },
-                { fields: [ { label: 'Ticket ID', value: 'T-1007', filled: true }, { label: 'Customer', value: '____', filled: false, correct: 'Ella Santos' }, { label: 'Issue', value: '____', filled: false, correct: 'Login problem' }, { label: 'Priority', value: '____', filled: false, correct: 'Low' } ], options: ['Ella Santos', 'Login problem', 'Low'] },
-                { fields: [ { label: 'Ticket ID', value: 'T-1008', filled: true }, { label: 'Customer', value: '____', filled: false, correct: 'Ryan Cruz' }, { label: 'Issue', value: '____', filled: false, correct: 'Service delay' }, { label: 'Priority', value: '____', filled: false, correct: 'Medium' } ], options: ['Ryan Cruz', 'Service delay', 'Medium'] },
-            ],
-            [ // Level 2: Customer Info
-                { fields: [ { label: 'Ticket ID', value: 'T-1002', filled: true }, { label: 'Customer', value: '____', filled: false, correct: 'Robert Kim' }, { label: 'Issue', value: '____', filled: false, correct: 'Technical outage' }, { label: 'Agent', value: '____', filled: false, correct: 'Maria Santos' } ], options: ['Robert Kim', 'Technical outage', 'Maria Santos'] },
-                { fields: [ { label: 'Ticket ID', value: 'T-1009', filled: true }, { label: 'Customer', value: '____', filled: false, correct: 'Grace Lim' }, { label: 'Contact No.', value: '____', filled: false, correct: '0917-555-1122' }, { label: 'Agent', value: '____', filled: false, correct: 'James Park' } ], options: ['Grace Lim', '0917-555-1122', 'James Park'] },
-                { fields: [ { label: 'Ticket ID', value: 'T-1010', filled: true }, { label: 'Customer', value: '____', filled: false, correct: 'Noel Bautista' }, { label: 'Account Type', value: '____', filled: false, correct: 'Premium' }, { label: 'Agent', value: '____', filled: false, correct: 'Alex Chen' } ], options: ['Noel Bautista', 'Premium', 'Alex Chen'] },
-                { fields: [ { label: 'Ticket ID', value: 'T-1011', filled: true }, { label: 'Customer', value: '____', filled: false, correct: 'Patricia Reyes' }, { label: 'Email', value: '____', filled: false, correct: 'p.reyes@email.com' }, { label: 'Agent', value: '____', filled: false, correct: 'David Tan' } ], options: ['Patricia Reyes', 'p.reyes@email.com', 'David Tan'] },
-            ],
-            [ // Level 3: Issue Details
-                { fields: [ { label: 'Ticket ID', value: 'T-1003', filled: true }, { label: 'Customer', value: '____', filled: false, correct: 'Sarah Lee' }, { label: 'Issue', value: '____', filled: false, correct: 'Account lockout' }, { label: 'Priority', value: '____', filled: false, correct: 'Medium' } ], options: ['Sarah Lee', 'Account lockout', 'Medium'] },
-                { fields: [ { label: 'Ticket ID', value: 'T-1012', filled: true }, { label: 'Customer', value: '____', filled: false, correct: 'Vincent Ortiz' }, { label: 'Issue', value: '____', filled: false, correct: 'Wrong item delivered' }, { label: 'Priority', value: '____', filled: false, correct: 'High' } ], options: ['Vincent Ortiz', 'Wrong item delivered', 'High'] },
-                { fields: [ { label: 'Ticket ID', value: 'T-1013', filled: true }, { label: 'Customer', value: '____', filled: false, correct: 'Kim Alvarez' }, { label: 'Issue', value: '____', filled: false, correct: 'Refund not received' }, { label: 'Priority', value: '____', filled: false, correct: 'High' } ], options: ['Kim Alvarez', 'Refund not received', 'High'] },
-                { fields: [ { label: 'Ticket ID', value: 'T-1014', filled: true }, { label: 'Customer', value: '____', filled: false, correct: 'Ben Torres' }, { label: 'Issue', value: '____', filled: false, correct: 'App crashing' }, { label: 'Priority', value: '____', filled: false, correct: 'Medium' } ], options: ['Ben Torres', 'App crashing', 'Medium'] },
-            ],
-            [ // Level 4: Ticket Complete
-                { fields: [ { label: 'Ticket ID', value: 'T-1004', filled: true }, { label: 'Customer', value: '____', filled: false, correct: 'Carlos Garcia' }, { label: 'Issue', value: '____', filled: false, correct: 'Hardware failure' }, { label: 'Priority', value: '____', filled: false, correct: 'High' }, { label: 'Agent', value: '____', filled: false, correct: 'Lisa Wong' } ], options: ['Carlos Garcia', 'Hardware failure', 'High', 'Lisa Wong'] },
-                { fields: [ { label: 'Ticket ID', value: 'T-1015', filled: true }, { label: 'Customer', value: '____', filled: false, correct: 'Nina Domingo' }, { label: 'Issue', value: '____', filled: false, correct: 'Late delivery' }, { label: 'Priority', value: '____', filled: false, correct: 'Medium' }, { label: 'Agent', value: '____', filled: false, correct: 'Alex Chen' } ], options: ['Nina Domingo', 'Late delivery', 'Medium', 'Alex Chen'] },
-                { fields: [ { label: 'Ticket ID', value: 'T-1016', filled: true }, { label: 'Customer', value: '____', filled: false, correct: 'Oscar Reyes' }, { label: 'Issue', value: '____', filled: false, correct: 'Overcharge' }, { label: 'Priority', value: '____', filled: false, correct: 'High' }, { label: 'Agent', value: '____', filled: false, correct: 'Maria Santos' } ], options: ['Oscar Reyes', 'Overcharge', 'High', 'Maria Santos'] },
-                { fields: [ { label: 'Ticket ID', value: 'T-1017', filled: true }, { label: 'Customer', value: '____', filled: false, correct: 'Cathy Lim' }, { label: 'Issue', value: '____', filled: false, correct: 'Cancellation request' }, { label: 'Priority', value: '____', filled: false, correct: 'Low' }, { label: 'Agent', value: '____', filled: false, correct: 'James Park' } ], options: ['Cathy Lim', 'Cancellation request', 'Low', 'James Park'] },
-            ],
-            [ // Level 5: Speed Run
-                { fields: [ { label: 'Ticket ID', value: 'T-1005', filled: true }, { label: 'Customer', value: '____', filled: false, correct: 'Amanda Brown' }, { label: 'Issue', value: '____', filled: false, correct: 'Billing dispute' }, { label: 'Priority', value: '____', filled: false, correct: 'Critical' }, { label: 'Agent', value: '____', filled: false, correct: 'David Tan' } ], options: ['Amanda Brown', 'Billing dispute', 'Critical', 'David Tan'] },
-                { fields: [ { label: 'Ticket ID', value: 'T-1018', filled: true }, { label: 'Customer', value: '____', filled: false, correct: 'Miguel Santos' }, { label: 'Issue', value: '____', filled: false, correct: 'Service outage' }, { label: 'Priority', value: '____', filled: false, correct: 'Critical' }, { label: 'Agent', value: '____', filled: false, correct: 'Lisa Wong' } ], options: ['Miguel Santos', 'Service outage', 'Critical', 'Lisa Wong'] },
-                { fields: [ { label: 'Ticket ID', value: 'T-1019', filled: true }, { label: 'Customer', value: '____', filled: false, correct: 'Diana Cruz' }, { label: 'Issue', value: '____', filled: false, correct: 'Data breach concern' }, { label: 'Priority', value: '____', filled: false, correct: 'Critical' }, { label: 'Agent', value: '____', filled: false, correct: 'Alex Chen' } ], options: ['Diana Cruz', 'Data breach concern', 'Critical', 'Alex Chen'] },
-                { fields: [ { label: 'Ticket ID', value: 'T-1020', filled: true }, { label: 'Customer', value: '____', filled: false, correct: 'Paolo Reyes' }, { label: 'Issue', value: '____', filled: false, correct: 'Failed transaction' }, { label: 'Priority', value: '____', filled: false, correct: 'High' }, { label: 'Agent', value: '____', filled: false, correct: 'Maria Santos' } ], options: ['Paolo Reyes', 'Failed transaction', 'High', 'Maria Santos'] },
             ],
         ];
 
@@ -1619,7 +1470,6 @@
                         div.classList.add('active');
                         if (container.id === 'scriptLevelGrid') state.script.level = idx;
                         else if (container.id === 'stormLevelGrid') state.storm.level = idx;
-                        else if (container.id === 'speedLevelGrid') state.speed.level = idx;
                         else if (container.id === 'qualityLevelGrid') state.quality.level = idx;
                     });
                 }
@@ -1634,7 +1484,6 @@
             const total = 5;
             const scriptDone = state.script.completed.size === total;
             const stormDone = state.storm.completed.size === total;
-            const speedDone = state.speed.completed.size === total;
             const qualityDone = state.quality.completed.size === total;
             const liveTotal = LIVE_CALL_DATA.length;
             const liveDone = state.live.completed.size === liveTotal;
@@ -1643,8 +1492,6 @@
                     level: state.script.level },
                 storm: { unlocked: true, progress: `${state.storm.completed.size}/${total}`, done: stormDone,
                     level: state.storm.level },
-                speed: { unlocked: true, progress: `${state.speed.completed.size}/${total}`, done: speedDone,
-                    level: state.speed.level },
                 quality: { unlocked: true, progress: `${state.quality.completed.size}/${total}`, done: qualityDone,
                     level: state.quality.level },
                 live: { unlocked: true, progress: `${state.live.completed.size}/${liveTotal}`, done: liveDone,
@@ -1654,7 +1501,7 @@
 
         function updateMainMenu() {
             const status = getUnlockStatus();
-            const ids = ['script', 'storm', 'speed', 'quality', 'live'];
+            const ids = ['script', 'storm', 'quality', 'live'];
             ids.forEach(id => {
                 const el = document.getElementById(`menu-${id}`);
                 if (!el) return;
@@ -1697,7 +1544,7 @@
                 if (target === 'main') {
                     if ('speechSynthesis' in window) window.speechSynthesis.cancel();
                     showScreen('screen-main');
-                    ['script', 'storm', 'speed', 'quality', 'live'].forEach(m => {
+                    ['script', 'storm', 'quality', 'live'].forEach(m => {
                         const el = document.getElementById(m + '-select');
                         if (el) el.style.display = '';
                         const instr = document.getElementById(m + '-instructions');
@@ -1722,7 +1569,6 @@
                 }
                 if (game === 'script') initScriptSavvy();
                 else if (game === 'storm') initCalmTheStorm();
-                else if (game === 'speed') initSystemSpeed();
                 else if (game === 'quality') initQualityQuest();
                 else if (game === 'live') initLiveCall();
                 showScreen('screen-' + game);
@@ -2185,263 +2031,6 @@
         });
 
         // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-        // SYSTEM SPEED
-        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-        let speedFields = [],
-            speedPlaced = [];
-
-        function initSystemSpeed() {
-            const container = document.getElementById('speedLevelGrid');
-            renderLevelGrid(container, SPEED_LEVELS, state.speed.completed, state.speed.level);
-            document.getElementById('speed-select').style.display = '';
-            document.getElementById('speed-instructions').style.display = 'none';
-            document.getElementById('speed-game').style.display = 'none';
-            document.getElementById('speedFeedback').classList.remove('show');
-        }
-
-        document.getElementById('speedStartBtn').addEventListener('click', () => {
-            const lv = state.speed.level;
-            const data = SPEED_LEVELS[lv];
-            if (!data) return;
-            state.speed.problem = 0;
-            document.getElementById('speed-select').style.display = 'none';
-            document.getElementById('speed-instructions').style.display = '';
-            document.getElementById('speedInstrObj').textContent = `⚡ Level ${data.id}: ${data.name}`;
-            document.getElementById('speedInstrDetail').textContent = 'Complete the ticket fields with the correct data. 4 problems this level.';
-        });
-
-        document.getElementById('speedPlayBtn').addEventListener('click', () => {
-            document.getElementById('speed-instructions').style.display = 'none';
-            document.getElementById('speed-game').style.display = '';
-            startSpeedGame();
-        });
-
-        function startSpeedGame() {
-            const lv = state.speed.level;
-            const data = SPEED_DATA[lv] && SPEED_DATA[lv][state.speed.problem];
-            if (!data) return;
-            const fields = data.fields.map(f => ({ ...f }));
-            speedFields = fields;
-            speedPlaced = fields.map(f => f.filled ? f.value : null);
-
-            const board = document.getElementById('speedBoard');
-            board.innerHTML = '';
-            fields.forEach((field, idx) => {
-                const div = document.createElement('div');
-                div.className = 'ticket-field';
-                div.dataset.idx = idx;
-                const isFilled = field.filled;
-                div.innerHTML = `
-              <span class="field-label">${field.label}</span>
-              <span class="field-value ${isFilled ? 'filled' : 'missing'}" id="speedField_${idx}">${field.value}</span>
-            `;
-                if (!isFilled) {
-                    div.style.border = '2px dashed rgba(255,255,255,0.06)';
-                    div.addEventListener('dragover', (e) => { e.preventDefault();
-                        div.style.borderColor = '#00b4ff'; });
-                    div.addEventListener('dragleave', () => { div.style.borderColor = 'rgba(255,255,255,0.06)'; });
-                    div.addEventListener('drop', (e) => {
-                        e.preventDefault();
-                        div.style.borderColor = 'rgba(255,255,255,0.06)';
-                        const val = e.dataTransfer.getData('text/plain');
-                        if (val) handleSpeedDrop(idx, val);
-                    });
-                }
-                board.appendChild(div);
-            });
-
-            const zone = document.getElementById('speedDragZone');
-            zone.innerHTML = '';
-            const options = shuffle([...data.options]);
-            options.forEach(val => {
-                const el = document.createElement('div');
-                el.className = 'drag-item';
-                el.textContent = val;
-                el.draggable = true;
-                el.dataset.value = val;
-                el.addEventListener('dragstart', (e) => { e.dataTransfer.setData('text/plain', val);
-                    el.classList.add('dragging'); });
-                el.addEventListener('dragend', () => el.classList.remove('dragging'));
-                el.addEventListener('touchstart', (e) => {
-                    const touch = e.touches[0];
-                    const ghost = document.getElementById('dragGhost');
-                    ghost.textContent = val;
-                    ghost.style.display = 'block';
-                    ghost.style.left = touch.clientX + 'px';
-                    ghost.style.top = touch.clientY + 'px';
-                    el.classList.add('dragging');
-                    window._speedDragVal = val;
-                });
-                el.addEventListener('touchmove', (e) => {
-                    e.preventDefault();
-                    const touch = e.touches[0];
-                    const ghost = document.getElementById('dragGhost');
-                    ghost.style.left = touch.clientX + 'px';
-                    ghost.style.top = touch.clientY + 'px';
-                });
-                el.addEventListener('touchend', (e) => {
-                    const ghost = document.getElementById('dragGhost');
-                    ghost.style.display = 'none';
-                    el.classList.remove('dragging');
-                    const touch = e.changedTouches[0];
-                    const slots = document.querySelectorAll('#speedBoard .ticket-field');
-                    slots.forEach(s => {
-                        const rect = s.getBoundingClientRect();
-                        if (touch.clientX >= rect.left && touch.clientX <= rect.right && touch.clientY >=
-                            rect.top && touch.clientY <= rect.bottom) {
-                            const idx = parseInt(s.dataset.idx);
-                            if (!isNaN(idx) && window._speedDragVal) {
-                                handleSpeedDrop(idx, window._speedDragVal);
-                            }
-                        }
-                    });
-                    window._speedDragVal = null;
-                });
-                zone.appendChild(el);
-            });
-
-            document.getElementById('speedGameLevel').textContent = 'Level ' + SPEED_LEVELS[state.speed.level].id +
-                ' · Problem ' + (state.speed.problem + 1) + '/' + PROBLEMS_PER_LEVEL;
-            const starStr = '★'.repeat(SPEED_LEVELS[state.speed.level].stars) + '☆'.repeat(5 - SPEED_LEVELS[state.speed
-                .level].stars);
-            document.getElementById('speedGameStars').textContent = starStr;
-            startTimer('speedGameTimer');
-            document.getElementById('speedFeedback').classList.remove('show');
-        }
-
-        function handleSpeedDrop(idx, val) {
-            const field = speedFields[idx];
-            if (!field || field.filled) return;
-            if (speedPlaced.includes(val)) return;
-            speedPlaced[idx] = val;
-            const el = document.getElementById('speedField_' + idx);
-            if (el) {
-                el.textContent = val;
-                el.className = 'field-value filled';
-            }
-            const items = document.querySelectorAll('#speedDragZone .drag-item');
-            items.forEach(item => {
-                if (item.dataset.value === val) {
-                    item.classList.add('placed');
-                    item.style.pointerEvents = 'none';
-                    item.style.opacity = '0.4';
-                }
-            });
-            if (!speedPlaced.includes(null)) {
-                setTimeout(() => {
-                    document.getElementById('speedCheckBtn').click();
-                }, 400);
-            }
-        }
-
-        document.getElementById('speedCheckBtn').addEventListener('click', () => {
-            const total = speedFields.length;
-            if (speedPlaced.includes(null)) {
-                const fb = document.getElementById('speedFeedback');
-                document.getElementById('speedFbIcon').textContent = '📦';
-                document.getElementById('speedFbTitle').textContent = 'Incomplete';
-                document.getElementById('speedFbTitle').className = 'fb-title gold';
-                document.getElementById('speedFbSub').textContent = 'Fill all fields first!';
-                document.getElementById('speedFbNext').style.display = 'none';
-                document.getElementById('speedFbReplay').style.display = '';
-                document.getElementById('speedFbReplay').textContent = '↻ OK';
-                fb.classList.add('show');
-                return;
-            }
-            let correct = true;
-            for (let i = 0; i < total; i++) {
-                const field = speedFields[i];
-                if (field.filled) continue;
-                const placed = speedPlaced[i];
-                const isCorrect = placed === field.correct;
-                if (!isCorrect) correct = false;
-                const el = document.getElementById('speedField_' + i);
-                if (el) {
-                    el.className = 'field-value ' + (isCorrect ? 'filled' : 'missing');
-                }
-            }
-            if (correct) {
-                state.speed.problem++;
-                if (state.speed.problem < PROBLEMS_PER_LEVEL) {
-                    showSpeedComplete(true, false);
-                } else {
-                    state.speed.problem = 0;
-                    showSpeedComplete(true, true);
-                }
-            } else {
-                const fb = document.getElementById('speedFeedback');
-                document.getElementById('speedFbIcon').textContent = '⚠️';
-                document.getElementById('speedFbTitle').textContent = 'Check Your Fields';
-                document.getElementById('speedFbTitle').className = 'fb-title red';
-                document.getElementById('speedFbSub').textContent = 'Some fields are incorrect. Try again!';
-                document.getElementById('speedFbNext').style.display = 'none';
-                document.getElementById('speedFbReplay').style.display = '';
-                document.getElementById('speedFbReplay').textContent = '↻ TRY AGAIN';
-                fb.classList.add('show');
-            }
-        });
-
-        let speedLevelJustCompleted = false;
-
-        function showSpeedComplete(success, levelComplete) {
-            stopTimer();
-            const fb = document.getElementById('speedFeedback');
-            if (success && levelComplete) {
-                speedLevelJustCompleted = true;
-                const xp = 30 + Math.max(0, 60 - state.seconds);
-                document.getElementById('speedFbIcon').textContent = '⚡';
-                document.getElementById('speedFbTitle').textContent = 'Level Complete!';
-                document.getElementById('speedFbTitle').className = 'fb-title gold';
-                document.getElementById('speedFbSub').textContent = 'Accurate and fast data entry!';
-                document.getElementById('speedFbScore').innerHTML =
-                    `<div class="row"><span class="label">Time Bonus</span><span>+${Math.max(0, 60 - state.seconds)} XP</span></div><div class="row"><span class="label">Accuracy Bonus</span><span>+30 XP</span></div><div class="row"><span class="label">TOTAL XP</span><span class="text-glow" style="color:#00b4ff;">${xp + 30} XP</span></div>`;
-                state.speed.completed.add(SPEED_LEVELS[state.speed.level].id);
-                notifyCssProgress('speed', xp + 30);
-                document.getElementById('speedFbNext').style.display = (state.speed.level < SPEED_LEVELS.length - 1) ?
-                    '' : 'none';
-                document.getElementById('speedFbNext').textContent = '➜ NEXT LEVEL';
-                document.getElementById('speedFbReplay').style.display = '';
-                document.getElementById('speedFbReplay').textContent = '↻ REPLAY';
-                updateMainMenu();
-            } else if (success) {
-                speedLevelJustCompleted = false;
-                document.getElementById('speedFbIcon').textContent = '✅';
-                document.getElementById('speedFbTitle').textContent = `Correct! (${state.speed.problem}/${PROBLEMS_PER_LEVEL})`;
-                document.getElementById('speedFbTitle').className = 'fb-title gold';
-                document.getElementById('speedFbSub').textContent = 'On to the next problem.';
-                document.getElementById('speedFbScore').innerHTML = '';
-                document.getElementById('speedFbNext').style.display = '';
-                document.getElementById('speedFbNext').textContent = '➜ NEXT PROBLEM';
-                document.getElementById('speedFbReplay').style.display = 'none';
-            }
-            fb.classList.add('show');
-        }
-
-        document.getElementById('speedFbReplay').addEventListener('click', () => {
-            document.getElementById('speedFeedback').classList.remove('show');
-            startSpeedGame();
-        });
-
-        document.getElementById('speedFbNext').addEventListener('click', () => {
-            document.getElementById('speedFeedback').classList.remove('show');
-            if (!speedLevelJustCompleted) {
-                startSpeedGame();
-                return;
-            }
-            if (state.speed.level < SPEED_LEVELS.length - 1) {
-                state.speed.level++;
-                document.getElementById('speed-game').style.display = 'none';
-                document.getElementById('speed-select').style.display = '';
-                renderLevelGrid(document.getElementById('speedLevelGrid'), SPEED_LEVELS, state.speed.completed, state
-                    .speed.level);
-            } else {
-                document.getElementById('speed-game').style.display = 'none';
-                document.getElementById('speed-select').style.display = '';
-                updateMainMenu();
-            }
-        });
-
-        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
         // QUALITY QUEST
         // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
         let qualityAnswered = false;
@@ -2855,10 +2444,9 @@
             if (document.getElementById('dragGhost').style.display === 'block') { e.preventDefault(); }
         }, { passive: false });
 
-        if (EMBEDDED && ['script', 'storm', 'speed', 'quality', 'live'].includes(AUTOSTART_GAME)) {
+        if (EMBEDDED && ['script', 'storm', 'quality', 'live'].includes(AUTOSTART_GAME)) {
             if (AUTOSTART_GAME === 'script') initScriptSavvy();
             else if (AUTOSTART_GAME === 'storm') initCalmTheStorm();
-            else if (AUTOSTART_GAME === 'speed') initSystemSpeed();
             else if (AUTOSTART_GAME === 'quality') initQualityQuest();
             else if (AUTOSTART_GAME === 'live') initLiveCall();
             showScreen('screen-' + AUTOSTART_GAME);
