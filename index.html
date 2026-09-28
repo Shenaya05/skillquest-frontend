@@ -1951,6 +1951,7 @@
         let state = null;
         let quizState = null;
         let quizTimer = null;
+        let previousTab = 'dashboard'; // ← remembers tab before entering game/quiz
 
         function initState(track, name, id) {
             return {
@@ -2411,6 +2412,19 @@
             else if (tab === 'leaderboard') renderLeaderboard(content);
         }
 
+        // Helper: figure out which tab is currently active
+        function getCurrentTabName() {
+            const activeTab = document.querySelector('.nav-tab.active');
+            if (!activeTab) return 'dashboard';
+            const txt = activeTab.textContent || '';
+            if (txt.includes('Dashboard')) return 'dashboard';
+            if (txt.includes('Modules')) return 'modules';
+            if (txt.includes('Analytics')) return 'analytics';
+            if (txt.includes('Badges')) return 'badges';
+            if (txt.includes('Leaderboard')) return 'leaderboard';
+            return 'dashboard';
+        }
+
         // ══════════════════════════════════════════
         // DASHBOARD
         // ══════════════════════════════════════════
@@ -2762,6 +2776,9 @@
         const gameProgress = {};
 
         function startGameModule(moduleId) {
+            // ✅ Remember which tab we came from so we can return to it on exit
+            previousTab = getCurrentTabName();
+
             const module = Object.values(COMPETENCY_MODULES).flat().find(m => m.id === moduleId);
             if (!module) {
                 showToast('Module not found');
@@ -2903,13 +2920,11 @@
             showMain();
         }
 
+        // ✅ Returns to whatever tab the user was on before entering the game/quiz
         function showMain() {
             showScreen('main');
             updateHUD();
-            const activeTab = document.querySelector('.nav-tab.active');
-            const tabName = activeTab?.textContent?.includes('Dashboard') ? 'dashboard' :
-                activeTab?.textContent?.includes('Analytics') ? 'analytics' : 'dashboard';
-            switchTab(tabName, activeTab);
+            switchTab(previousTab);
         }
     </script>
 </body>
