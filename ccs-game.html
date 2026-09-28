@@ -957,6 +957,16 @@
                 padding: 8px 12px;
             }
         }
+
+        /* ─── HEARTS (lives) ─── */
+        [id$="GameStars"], #liveGameHearts, #safetyLevelStars, .level-card .stars, .level-card.completed .stars {
+            color: #ff4d6d !important;
+            text-shadow: 0 0 10px rgba(255, 77, 109, 0.45) !important;
+            letter-spacing: 2px;
+        }
+        .hearts-row { color: #ff4d6d; letter-spacing: 2px; }
+        @keyframes heartHit { 0% { transform: scale(1); } 30% { transform: scale(1.35); } 100% { transform: scale(1); } }
+        .heart-hit { display: inline-block; animation: heartHit 0.4s; }
     </style>
 </head>
 <body>
@@ -1039,7 +1049,7 @@
             <div id="script-game" style="display:none;">
                 <div class="game-header">
                     <span class="level-tag" id="scriptGameLevel">Level 1</span>
-                    <span class="stars-display" id="scriptGameStars">★★★★★</span>
+                    <span class="stars-display" id="scriptGameStars">♥♥♥♥♥</span>
                     <span class="timer" id="scriptGameTimer">00:00</span>
                 </div>
                 <div class="flow-board" id="scriptBoard"></div>
@@ -1086,7 +1096,7 @@
             <div id="storm-game" style="display:none;">
                 <div class="game-header">
                     <span class="level-tag" id="stormGameLevel">Level 1</span>
-                    <span class="stars-display" id="stormGameStars">★★★★★</span>
+                    <span class="stars-display" id="stormGameStars">♥♥♥♥♥</span>
                     <span class="timer" id="stormGameTimer">00:00</span>
                 </div>
                 <div class="scenario-box" id="stormScenarioBox">
@@ -1133,7 +1143,7 @@
             <div id="quality-game" style="display:none;">
                 <div class="game-header">
                     <span class="level-tag" id="qualityGameLevel">Level 1</span>
-                    <span class="stars-display" id="qualityGameStars">★★★★★</span>
+                    <span class="stars-display" id="qualityGameStars">♥♥♥♥♥</span>
                     <span class="timer" id="qualityGameTimer">00:00</span>
                 </div>
                 <div class="qa-question" id="qualityQuestionBox">
@@ -1178,6 +1188,7 @@
             <div id="live-game" style="display:none;">
                 <div class="game-header">
                     <span class="level-tag" id="liveGameLevel">Call 1</span>
+                    <span class="stars-display" id="liveGameHearts">♥♥♥♥♥</span>
                     <span class="stars-display" id="liveGameTurn">Turn 1/5</span>
                     <span class="timer" id="liveGameTimer">00:00</span>
                 </div>
@@ -1213,13 +1224,19 @@
         const AUTOSTART_GAME = CSS_PARAMS.get('game');
         const EMBEDDED = CSS_PARAMS.get('embed') === '1';
 
+        function cssLevelIds(game) {
+            if (game === 'live') return LIVE_CALL_DATA.map((_, i) => i);
+            return ({ script: SCRIPT_LEVELS, storm: STORM_LEVELS, quality: QUALITY_LEVELS })[game].map(l => l.id);
+        }
+
         function notifyCssProgress(game, earnedXP) {
             try {
                 const gameState = state[game];
                 if (!gameState) return;
                 const completed = gameState.completed.size;
                 const total = (game === 'live') ? LIVE_CALL_DATA.length : 5;
-                const pct = Math.round((completed / total) * 100);
+                const hs = heartsSummary(game, cssLevelIds(game), gameState.completed);
+                const pct = hs.pct;
                 (window.parent || window).postMessage({
                     type: 'EIM_MODULE_PROGRESS',
                     game,
@@ -1227,6 +1244,7 @@
                     total,
                     pct,
                     earnedXP: earnedXP || 0,
+                    heartsLeft: hearts.cur, heartsEarned: hs.earned, heartsMax: hs.max,
                     moduleComplete: completed >= total
                 }, '*');
             } catch (e) { /* no parent listening */ }
@@ -1235,6 +1253,52 @@
         // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
         // STATE
         // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        // ♥ HEARTS — 5 lives per level; hearts left on a clear = the score basis
+        const MAX_HEARTS = 5;
+        const hearts = { cur: MAX_HEARTS, best: {} };
+        let heartsHeaderId = null;
+        let heartsFresh = false;
+        function heartsStr(n) { n = (n === undefined) ? hearts.cur : n; return '♥'.repeat(n) + '♡'.repeat(MAX_HEARTS - n); }
+        function paintHearts() {
+            const el = heartsHeaderId && document.getElementById(heartsHeaderId);
+            if (el) el.textContent = heartsStr();
+            const s = document.getElementById('safetyLevelStars');
+            if (s) s.textContent = heartsStr();
+        }
+        function resetHearts(headerId) { hearts.cur = MAX_HEARTS; heartsHeaderId = headerId; heartsFresh = false; paintHearts(); }
+        function syncHearts(headerId) { if (heartsFresh) resetHearts(headerId); else { heartsHeaderId = headerId; paintHearts(); } }
+        function loseHeart() {
+            if (hearts.cur > 0) hearts.cur--;
+            paintHearts();
+            const el = heartsHeaderId && document.getElementById(heartsHeaderId);
+            if (el) { el.classList.remove('heart-hit'); void el.offsetWidth; el.classList.add('heart-hit'); }
+            return hearts.cur === 0;
+        }
+        function keepHearts(game, levelId) { const k = game + ':' + levelId; hearts.best[k] = Math.max(hearts.best[k] || 0, hearts.cur); }
+        function levelHeartsStr(game, levelId, done) { return heartsStr(done ? (hearts.best[game + ':' + levelId] || 0) : 0); }
+        function heartsSummary(game, levelIds, completed) {
+            const earned = levelIds.reduce((s, id) => s + (completed.has(id) ? (hearts.best[game + ':' + id] || 0) : 0), 0);
+            const max = levelIds.length * MAX_HEARTS;
+            return { earned, max, pct: max ? Math.round(earned / max * 100) : 0 };
+        }
+        function showOutOfHearts(game, overlayId, p, hideScore) {
+            stopTimer();
+            if (state[game] && 'problem' in state[game]) state[game].problem = 0;
+            const g = id => document.getElementById(p + id);
+            g('FbIcon').textContent = '💔';
+            g('FbTitle').textContent = 'Out of Hearts!';
+            g('FbTitle').className = 'fb-title red';
+            g('FbSub').textContent = 'You lost all ' + MAX_HEARTS + ' hearts. Retry the level!';
+            const sc = g('FbScore');
+            if (sc) {
+                if (hideScore) sc.style.display = 'none';
+                else sc.innerHTML = '<div class="row"><span class="label">Hearts Left</span><span class="hearts-row">' + heartsStr() + '</span></div>';
+            }
+            const nx = g('FbNext'); if (nx) nx.style.display = 'none';
+            const rp = g('FbReplay'); if (rp) { rp.style.display = ''; rp.textContent = '↻ RETRY LEVEL'; }
+            document.getElementById(overlayId).classList.add('show');
+        }
+
         const state = {
             script: { level: 0, problem: 0, completed: new Set() },
             storm: { level: 0, problem: 0, completed: new Set() },
@@ -1459,9 +1523,8 @@
                 if (isDone) div.classList.add('completed');
                 if (isActive) div.classList.add('active');
                 if (idx > current + 1) div.classList.add('locked');
-                const starStr = '★'.repeat(lv.stars) + '☆'.repeat(5 - lv.stars);
                 div.innerHTML =
-                    `<div class="num">${lv.id}</div><div class="name">${lv.name}</div><div class="stars">${isDone ? '★★★★★' : starStr}</div>`;
+                    `<div class="num">${lv.id}</div><div class="name">${lv.name}</div><div class="stars">${levelHeartsStr(container.id.replace('LevelGrid', ''), lv.id, isDone)}</div>`;
                 if (idx <= current + 1 && !isDone) {
                     div.style.cursor = 'pointer';
                     div.addEventListener('click', () => {
@@ -1602,6 +1665,7 @@
         });
 
         document.getElementById('scriptPlayBtn').addEventListener('click', () => {
+            heartsFresh = true;
             document.getElementById('script-instructions').style.display = 'none';
             document.getElementById('script-game').style.display = '';
             startScriptGame();
@@ -1691,9 +1755,7 @@
 
             document.getElementById('scriptGameLevel').textContent = 'Level ' + SCRIPT_LEVELS[state.script.level].id +
                 ' · Problem ' + (state.script.problem + 1) + '/' + PROBLEMS_PER_LEVEL;
-            const starStr = '★'.repeat(SCRIPT_LEVELS[state.script.level].stars) + '☆'.repeat(5 - SCRIPT_LEVELS[state.script
-                .level].stars);
-            document.getElementById('scriptGameStars').textContent = starStr;
+            syncHearts('scriptGameStars');
             startTimer('scriptGameTimer');
             document.getElementById('scriptFeedback').classList.remove('show');
             const hintEl = document.getElementById('scriptHintText');
@@ -1777,6 +1839,7 @@
                     showScriptComplete(true, true);
                 }
             } else {
+                if (loseHeart()) { scriptLevelJustCompleted = false; showOutOfHearts('script', 'scriptFeedback', 'script'); return; }
                 const fb = document.getElementById('scriptFeedback');
                 document.getElementById('scriptFbIcon').textContent = '⚠️';
                 document.getElementById('scriptFbTitle').textContent = 'Not Quite!';
@@ -1802,8 +1865,9 @@
                 document.getElementById('scriptFbTitle').className = 'fb-title gold';
                 document.getElementById('scriptFbSub').textContent = 'You nailed all 4 call flows!';
                 document.getElementById('scriptFbScore').innerHTML =
-                    `<div class="row"><span class="label">Time Bonus</span><span>+${Math.max(0, 60 - state.seconds)} XP</span></div><div class="row"><span class="label">Accuracy Bonus</span><span>+30 XP</span></div><div class="row"><span class="label">TOTAL XP</span><span class="text-glow" style="color:#00b4ff;">${xp + 30} XP</span></div>`;
+                    `<div class="row"><span class="label">Hearts Left</span><span class="hearts-row">${heartsStr()}</span></div><div class="row"><span class="label">Time Bonus</span><span>+${Math.max(0, 60 - state.seconds)} XP</span></div><div class="row"><span class="label">Accuracy Bonus</span><span>+30 XP</span></div><div class="row"><span class="label">TOTAL XP</span><span class="text-glow" style="color:#00b4ff;">${xp + 30} XP</span></div>`;
                 state.script.completed.add(SCRIPT_LEVELS[state.script.level].id);
+                keepHearts('script', SCRIPT_LEVELS[state.script.level].id);
                 notifyCssProgress('script', xp + 30);
                 document.getElementById('scriptFbNext').style.display = (state.script.level < SCRIPT_LEVELS.length - 1) ?
                     '' : 'none';
@@ -1826,6 +1890,7 @@
         }
 
         document.getElementById('scriptFbReplay').addEventListener('click', () => {
+            { const t = document.getElementById('scriptFbReplay').textContent; if (t === '↻ REPLAY' || t === '↻ RETRY LEVEL') heartsFresh = true; }
             document.getElementById('scriptFeedback').classList.remove('show');
             if (document.getElementById('scriptFbReplay').textContent === '↻ OK' || document.getElementById(
                     'scriptFbReplay').textContent === '↻ TRY AGAIN') {
@@ -1879,6 +1944,7 @@
         });
 
         document.getElementById('stormPlayBtn').addEventListener('click', () => {
+            heartsFresh = true;
             document.getElementById('storm-instructions').style.display = 'none';
             document.getElementById('storm-game').style.display = '';
             startStormGame();
@@ -1915,9 +1981,7 @@
 
             document.getElementById('stormGameLevel').textContent = 'Level ' + STORM_LEVELS[state.storm.level].id +
                 ' · Problem ' + (state.storm.problem + 1) + '/' + PROBLEMS_PER_LEVEL;
-            const starStr = '★'.repeat(STORM_LEVELS[state.storm.level].stars) + '☆'.repeat(5 - STORM_LEVELS[state.storm
-                .level].stars);
-            document.getElementById('stormGameStars').textContent = starStr;
+            syncHearts('stormGameStars');
             startTimer('stormGameTimer');
             document.getElementById('stormFeedbackOverlay').classList.remove('show');
         }
@@ -1953,6 +2017,7 @@
                 } else {
                     state.storm.problem = 0;
                     state.storm.completed.add(STORM_LEVELS[lv].id);
+                    keepHearts('storm', STORM_LEVELS[lv].id);
                     notifyCssProgress('storm', 75);
                     updateMainMenu();
                     setTimeout(() => {
@@ -1960,6 +2025,7 @@
                     }, 600);
                 }
             } else {
+                if (loseHeart()) { stormLevelJustCompleted = false; showOutOfHearts('storm', 'stormFeedbackOverlay', 'storm'); return; }
                 fb.textContent = '❌ That response could escalate the situation. Try again.';
                 fb.className = 'scenario-feedback error';
                 setTimeout(() => {
@@ -1985,7 +2051,7 @@
                 document.getElementById('stormFbTitle').className = 'fb-title gold';
                 document.getElementById('stormFbSub').textContent = 'Great empathy and de‑escalation skills!';
                 document.getElementById('stormFbScore').innerHTML =
-                    `<div class="row"><span class="label">Time Bonus</span><span>+${Math.max(0, 60 - state.seconds)} XP</span></div><div class="row"><span class="label">Accuracy Bonus</span><span>+30 XP</span></div><div class="row"><span class="label">TOTAL XP</span><span class="text-glow" style="color:#00b4ff;">${xp + 30} XP</span></div>`;
+                    `<div class="row"><span class="label">Hearts Left</span><span class="hearts-row">${heartsStr()}</span></div><div class="row"><span class="label">Time Bonus</span><span>+${Math.max(0, 60 - state.seconds)} XP</span></div><div class="row"><span class="label">Accuracy Bonus</span><span>+30 XP</span></div><div class="row"><span class="label">TOTAL XP</span><span class="text-glow" style="color:#00b4ff;">${xp + 30} XP</span></div>`;
                 document.getElementById('stormFbNext').style.display = (state.storm.level < STORM_LEVELS.length - 1) ?
                     '' : 'none';
                 document.getElementById('stormFbNext').textContent = '➜ NEXT LEVEL';
@@ -2007,6 +2073,7 @@
         }
 
         document.getElementById('stormFbReplay').addEventListener('click', () => {
+            { const t = document.getElementById('stormFbReplay').textContent; if (t === '↻ REPLAY' || t === '↻ RETRY LEVEL') heartsFresh = true; }
             document.getElementById('stormFeedbackOverlay').classList.remove('show');
             startStormGame();
         });
@@ -2057,6 +2124,7 @@
         });
 
         document.getElementById('qualityPlayBtn').addEventListener('click', () => {
+            heartsFresh = true;
             document.getElementById('quality-instructions').style.display = 'none';
             document.getElementById('quality-game').style.display = '';
             startQualityGame();
@@ -2089,9 +2157,7 @@
 
             document.getElementById('qualityGameLevel').textContent = 'Level ' + QUALITY_LEVELS[state.quality.level].id +
                 ' · Problem ' + (state.quality.problem + 1) + '/' + PROBLEMS_PER_LEVEL;
-            const starStr = '★'.repeat(QUALITY_LEVELS[state.quality.level].stars) + '☆'.repeat(5 - QUALITY_LEVELS[state
-                .quality.level].stars);
-            document.getElementById('qualityGameStars').textContent = starStr;
+            syncHearts('qualityGameStars');
             startTimer('qualityGameTimer');
             document.getElementById('qualityFeedback').classList.remove('show');
         }
@@ -2130,6 +2196,7 @@
                 } else {
                     state.quality.problem = 0;
                     state.quality.completed.add(QUALITY_LEVELS[lv].id);
+                    keepHearts('quality', QUALITY_LEVELS[lv].id);
                     notifyCssProgress('quality', 75);
                     updateMainMenu();
                     setTimeout(() => {
@@ -2137,6 +2204,7 @@
                     }, 600);
                 }
             } else {
+                if (loseHeart()) { qualityLevelJustCompleted = false; showOutOfHearts('quality', 'qualityFeedback', 'quality'); return; }
                 const fb = document.getElementById('qualityFeedback');
                 document.getElementById('qualityFbIcon').textContent = '❌';
                 document.getElementById('qualityFbTitle').textContent = 'Incorrect';
@@ -2162,7 +2230,7 @@
                 document.getElementById('qualityFbTitle').className = 'fb-title gold';
                 document.getElementById('qualityFbSub').textContent = 'Excellent compliance knowledge!';
                 document.getElementById('qualityFbScore').innerHTML =
-                    `<div class="row"><span class="label">Time Bonus</span><span>+${Math.max(0, 60 - state.seconds)} XP</span></div><div class="row"><span class="label">Accuracy Bonus</span><span>+30 XP</span></div><div class="row"><span class="label">TOTAL XP</span><span class="text-glow" style="color:#00b4ff;">${xp + 30} XP</span></div>`;
+                    `<div class="row"><span class="label">Hearts Left</span><span class="hearts-row">${heartsStr()}</span></div><div class="row"><span class="label">Time Bonus</span><span>+${Math.max(0, 60 - state.seconds)} XP</span></div><div class="row"><span class="label">Accuracy Bonus</span><span>+30 XP</span></div><div class="row"><span class="label">TOTAL XP</span><span class="text-glow" style="color:#00b4ff;">${xp + 30} XP</span></div>`;
                 document.getElementById('qualityFbNext').style.display = (state.quality.level < QUALITY_LEVELS.length -
                     1) ? '' : 'none';
                 document.getElementById('qualityFbNext').textContent = '➜ NEXT LEVEL';
@@ -2184,6 +2252,7 @@
         }
 
         document.getElementById('qualityFbReplay').addEventListener('click', () => {
+            { const t = document.getElementById('qualityFbReplay').textContent; if (t === '↻ REPLAY' || t === '↻ RETRY LEVEL') heartsFresh = true; }
             document.getElementById('qualityFeedback').classList.remove('show');
             if (document.getElementById('qualityFbReplay').textContent === '↻ OK' || document.getElementById(
                     'qualityFbReplay').textContent === '↻ TRY AGAIN') {
@@ -2295,6 +2364,7 @@
         });
 
         function startLiveCall() {
+            resetHearts('liveGameHearts');
             state.live.turn = 0;
             liveScores = {};
             liveCorrectCount = 0;
@@ -2374,6 +2444,7 @@
             liveScores[cat].total++;
             if (correct) { liveScores[cat].correct++;
                 liveCorrectCount++; }
+            if (!correct) loseHeart();
 
             const fb = document.getElementById('liveFeedback');
             fb.textContent = correct ? data.feedback :
@@ -2383,7 +2454,7 @@
             setTimeout(() => {
                 const call = LIVE_CALL_DATA[state.live.scenario];
                 state.live.turn++;
-                if (state.live.turn < call.turns.length) {
+                if (state.live.turn < call.turns.length && hearts.cur > 0) {
                     renderLiveTurn();
                 } else {
                     finishLiveCall();
@@ -2396,8 +2467,8 @@
             const call = LIVE_CALL_DATA[state.live.scenario];
             const totalTurns = call.turns.length;
             const pct = Math.round((liveCorrectCount / totalTurns) * 100);
-            const passed = pct >= 60;
-            if (passed) state.live.completed.add(state.live.scenario);
+            const passed = pct >= 60 && hearts.cur > 0;
+            if (passed) { state.live.completed.add(state.live.scenario); keepHearts('live', state.live.scenario); }
             updateMainMenu();
 
             const xp = liveCorrectCount * 20 + Math.max(0, 90 - state.seconds);
@@ -2414,6 +2485,7 @@
                 rows +=
                     `<div class="row"><span class="label">${cat}</span><span>${s.correct}/${s.total} (${catPct}%)</span></div>`;
             });
+            rows += `<div class="row"><span class="label">Hearts Left</span><span class="hearts-row">${heartsStr()}</span></div>`;
             rows += `<div class="row"><span class="label">TOTAL XP</span><span class="text-glow" style="color:#00b4ff;">${xp} XP</span></div>`;
             document.getElementById('liveFbScore').innerHTML = rows;
 
