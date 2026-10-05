@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>SkillQuest – TESDA Gamified Assessment</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SkillQuest – Equal Button Sizes</title>
     <style>
         /* ── Fonts ── */
         @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap');
@@ -68,6 +68,9 @@
             text-align: center;
             z-index: 1;
             padding: 40px 20px;
+            width: 100%;
+            max-width: 640px;
+            margin: 0 auto;
         }
         .splash-logo {
             font-family: 'Rajdhani', sans-serif;
@@ -94,6 +97,8 @@
             color: var(--muted);
             max-width: 460px;
             line-height: 1.6;
+            margin-left: auto;
+            margin-right: auto;
         }
         .splash-tagline strong {
             color: var(--text);
@@ -130,12 +135,23 @@
             background: rgba(168, 85, 247, .1);
         }
 
+        /* ── Button Row: FLEX WITH EQUAL WIDTH ── */
+        .button-row {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 8px;
+            width: 100%;
+        }
+
         /* ── Buttons ── */
         .btn {
             display: inline-flex;
             align-items: center;
+            justify-content: center;
             gap: 8px;
-            padding: 14px 32px;
+            padding: 14px 20px;
             border-radius: var(--r);
             font-family: 'Rajdhani', sans-serif;
             font-size: 18px;
@@ -144,6 +160,11 @@
             cursor: pointer;
             border: none;
             transition: all .2s;
+            white-space: nowrap;
+            /* Equal width: flex 1 makes each button grow equally */
+            flex: 1 1 0;
+            min-width: 0; /* allows shrinking if needed */
+            text-align: center;
         }
         .btn-primary {
             background: linear-gradient(135deg, var(--accent1), #6366f1);
@@ -181,7 +202,7 @@
             transform: none !important;
         }
 
-        /* ══════════════ REGISTER ══════════════ */
+        /* ── Rest of the CSS (unchanged) ── */
         #register {
             align-items: center;
             justify-content: center;
@@ -319,7 +340,6 @@
             line-height: 1.3;
         }
 
-        /* ══════════════ MAIN HUD ══════════════ */
         #main {
             flex-direction: column;
         }
@@ -468,7 +488,6 @@
             margin: 0 auto;
         }
 
-        /* ══════════════ DASHBOARD ══════════════ */
         .dash-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -636,7 +655,6 @@
             margin-top: 6px;
         }
 
-        /* ══════════════ QUIZ / GAME ══════════════ */
         #quiz-screen {
             background: var(--bg);
             padding: 0;
@@ -736,7 +754,6 @@
             margin: 0 auto;
         }
 
-        /* ══════════════ GAME MODULE ══════════════ */
         .game-module-frame-wrap {
             flex: 1;
             width: 100%;
@@ -904,7 +921,6 @@
             gap: 12px;
         }
 
-        /* xp popup */
         .xp-popup {
             position: fixed;
             top: 80px;
@@ -939,7 +955,6 @@
             }
         }
 
-        /* ══════════════ RESULTS ══════════════ */
         .results-body {
             padding: 40px 24px;
             max-width: 640px;
@@ -1040,7 +1055,6 @@
             color: var(--accent4);
         }
 
-        /* ══════════════ LEADERBOARD ══════════════ */
         .leaderboard-table {
             background: var(--panel);
             border: 1px solid var(--border);
@@ -1108,7 +1122,6 @@
             color: var(--accent3);
         }
 
-        /* ══════════════ BADGES ══════════════ */
         .badges-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
@@ -1154,7 +1167,6 @@
             margin-top: 6px;
         }
 
-        /* ══════════════ ANALYTICS ══════════════ */
         .analytics-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -1245,7 +1257,6 @@
             font-family: 'JetBrains Mono', monospace;
         }
 
-        /* modal */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -1302,7 +1313,6 @@
             justify-content: center;
         }
 
-        /* ── confirm dialog (logout) ── */
         .confirm-actions {
             display: flex;
             gap: 12px;
@@ -1335,7 +1345,6 @@
             transform: translateX(-50%) translateY(0);
         }
 
-        /* ── track filter tabs on leaderboard ── */
         .lb-track-tabs {
             display: flex;
             gap: 6px;
@@ -1348,11 +1357,26 @@
             font-family: 'Inter', sans-serif;
             font-weight: 500;
             letter-spacing: 0;
+            flex: 0 1 auto;
         }
         .lb-track-tabs .btn.active-track {
             background: var(--accent1);
             color: #fff;
             border-color: var(--accent1);
+        }
+
+        /* === MEDIA QUERY: STACK BUTTONS ON VERY SMALL SCREENS === */
+        @media (max-width: 520px) {
+            .button-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .btn {
+                flex: 1 1 auto;
+                white-space: normal;
+                padding: 14px 16px;
+                font-size: 16px;
+            }
         }
     </style>
 </head>
@@ -1373,12 +1397,15 @@
                 <span class="track-pill ccs">🎧 CCS NC II</span>
                 <span class="track-pill pcops">💻 PC OPS NC II</span>
             </div>
-            <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
-                <button class="btn btn-success" id="continue-btn" style="display:none;" onclick="resumeSession()">↻ Continue Session</button>
+
+            <!-- ✅ BUTTON ROW WITH EQUAL SIZED BUTTONS -->
+            <div class="button-row">
+                <button class="btn btn-success" id="continue-btn" style="display:none;" onclick="resumeSession()">↻ Continue</button>
                 <button class="btn btn-primary" onclick="showScreen('register')">▶ Create Account</button>
                 <button class="btn btn-secondary" onclick="showScreen('login')">🔑 Log In</button>
-                <button class="btn btn-secondary" onclick="loadDemo()">⚡ Quick Demo (offline)</button>
+                <button class="btn btn-secondary" onclick="loadDemo()">⚡ Quick Demo</button>
             </div>
+
             <p id="api-status" style="margin-top:14px;font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace;"></p>
             <p style="margin-top:20px;font-size:12px;color:var(--muted);">
                 City College of Calamba · Dept. of Computing and Informatics
@@ -1607,7 +1634,7 @@
         </div>
     </div>
 
-    <!-- ══════ LOGOUT CONFIRMATION MODAL (inline styles = always shows) ══════ -->
+    <!-- ══════ LOGOUT CONFIRMATION MODAL ══════ -->
     <div id="logout-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.75); z-index:9999; align-items:center; justify-content:center; padding:20px;">
         <div style="background:var(--panel); border:1px solid var(--border); border-radius:16px; padding:36px; max-width:420px; width:100%; text-align:center; position:relative;">
             <button style="position:absolute; top:16px; right:16px; background:var(--card); border:none; color:var(--muted); width:32px; height:32px; border-radius:50%; cursor:pointer; font-size:16px; display:flex; align-items:center; justify-content:center;" onclick="closeLogoutModal()">✕</button>
@@ -1629,338 +1656,81 @@
         // ══════════════════════════════════════════
         // DATA LAYER
         // ══════════════════════════════════════════
-
         const TRACKS = {
             eim: { label: 'EIM NC II', full: 'Electrical Installation & Maintenance', color: '#f59e0b', icon: '⚡' },
             ccs: { label: 'CCS NC II', full: 'Contact Center Services', color: '#22d3a5', icon: '🎧' },
             pcops: { label: 'PC OPS NC II', full: 'PC Operations & Maintenance', color: '#a855f7', icon: '💻' },
         };
 
-        // ─── Helper to create PC OPS quiz questions ──────────────
         function makePCopsQuestions() {
             return [
-                {
-                    scenario: 'You are setting up a new computer workstation.',
-                    q: 'What is the correct posture for using a computer?',
-                    opts: ['Feet flat on floor, screen at eye level', 'Slouching in the chair', 'Screen below desk level',
-                        'Feet crossed on chair'
-                    ],
-                    ans: 0,
-                    xp: 10,
-                    feedback: 'Proper ergonomics prevents strain and injury. Keep your feet flat and screen at eye level.'
-                }, {
-                    scenario: 'You notice a frayed power cord in the office.',
-                    q: 'What is the safest course of action?',
-                    opts: ['Report it to IT and unplug it immediately', 'Ignore it if it still works',
-                        'Wrap it with electrical tape', 'Continue using it carefully'
-                    ],
-                    ans: 0,
-                    xp: 10,
-                    feedback: 'Frayed cords are a fire and shock hazard. Always report and unplug them immediately.'
-                },
-                {
-                    scenario: 'You are organizing a project folder on your PC.',
-                    q: 'Which file extension indicates an image file?',
-                    opts: ['.docx', '.jpg', '.exe', '.pdf'],
-                    ans: 1,
-                    xp: 10,
-                    feedback: '.jpg is a common image file extension used for photos and graphics.'
-                }, {
-                    scenario: 'You need to find a specific file you saved yesterday.',
-                    q: 'What is the most efficient way to find it?',
-                    opts: ['Search by file name in File Explorer', 'Browse every folder manually',
-                        'Check the Recycle Bin', 'Restart the computer'
-                    ],
-                    ans: 0,
-                    xp: 10,
-                    feedback: 'Using the search bar in File Explorer is the quickest way to locate a specific file.'
-                },
-                {
-                    scenario: 'You are typing a long report in a word processor.',
-                    q: 'What shortcut is used to save the file?',
-                    opts: ['Ctrl+S', 'Ctrl+C', 'Ctrl+V', 'Ctrl+Z'],
-                    ans: 0,
-                    xp: 10,
-                    feedback: 'Ctrl+S (or Cmd+S on Mac) is the universal shortcut to save the current file.'
-                }, {
-                    scenario: 'You need to quickly copy and paste text.',
-                    q: 'What is the correct shortcut sequence?',
-                    opts: ['Ctrl+C then Ctrl+V', 'Ctrl+V then Ctrl+C', 'Ctrl+X then Ctrl+V', 'Ctrl+Z then Ctrl+Y'],
-                    ans: 0,
-                    xp: 10,
-                    feedback: 'Copy (Ctrl+C) then Paste (Ctrl+V) is the standard shortcut sequence.'
-                },
-                {
-                    scenario: 'You are creating a budget in a spreadsheet.',
-                    q: 'Which formula correctly adds up a column of numbers?',
-                    opts: ['=SUM(A1:A10)', '=TOTAL(A1:A10)', '=ADD(A1:A10)', '=COUNT(A1:A10)'],
-                    ans: 0,
-                    xp: 10,
-                    feedback: '=SUM is the standard function for adding a range of cells in most spreadsheet software.'
-                }, {
-                    scenario: 'You want to freeze the header row so it stays visible while scrolling.',
-                    q: 'Where is the "Freeze Panes" option found?',
-                    opts: ['View tab', 'Home tab', 'Insert tab', 'Formulas tab'],
-                    ans: 0,
-                    xp: 10,
-                    feedback: 'The "Freeze Panes" option is typically located in the View tab of the ribbon.'
-                },
-                {
-                    scenario: 'Your computer is running unusually slow.',
-                    q: 'What is a good first step to improve performance?',
-                    opts: ['Run Disk Cleanup', 'Reboot the router', 'Reinstall Windows', 'Update the printer driver'],
-                    ans: 0,
-                    xp: 10,
-                    feedback: 'Disk Cleanup removes temporary files and system caches that can slow down your PC.'
-                }, {
-                    scenario: 'You are installing a new hardware device.',
-                    q: 'What should you do after physically connecting the device?',
-                    opts: ['Install the necessary drivers', 'Format the hard drive', 'Delete system files',
-                        'Change the BIOS settings'
-                    ],
-                    ans: 0,
-                    xp: 10,
-                    feedback: 'Installing the correct drivers ensures the hardware communicates properly with the operating system.'
-                }
+                { scenario: 'You are setting up a new computer workstation.', q: 'What is the correct posture for using a computer?', opts: ['Feet flat on floor, screen at eye level', 'Slouching in the chair', 'Screen below desk level', 'Feet crossed on chair'], ans: 0, xp: 10, feedback: 'Proper ergonomics prevents strain and injury. Keep your feet flat and screen at eye level.' },
+                { scenario: 'You notice a frayed power cord in the office.', q: 'What is the safest course of action?', opts: ['Report it to IT and unplug it immediately', 'Ignore it if it still works', 'Wrap it with electrical tape', 'Continue using it carefully'], ans: 0, xp: 10, feedback: 'Frayed cords are a fire and shock hazard. Always report and unplug them immediately.' },
+                { scenario: 'You are organizing a project folder on your PC.', q: 'Which file extension indicates an image file?', opts: ['.docx', '.jpg', '.exe', '.pdf'], ans: 1, xp: 10, feedback: '.jpg is a common image file extension used for photos and graphics.' },
+                { scenario: 'You need to find a specific file you saved yesterday.', q: 'What is the most efficient way to find it?', opts: ['Search by file name in File Explorer', 'Browse every folder manually', 'Check the Recycle Bin', 'Restart the computer'], ans: 0, xp: 10, feedback: 'Using the search bar in File Explorer is the quickest way to locate a specific file.' },
+                { scenario: 'You are typing a long report in a word processor.', q: 'What shortcut is used to save the file?', opts: ['Ctrl+S', 'Ctrl+C', 'Ctrl+V', 'Ctrl+Z'], ans: 0, xp: 10, feedback: 'Ctrl+S (or Cmd+S on Mac) is the universal shortcut to save the current file.' },
+                { scenario: 'You need to quickly copy and paste text.', q: 'What is the correct shortcut sequence?', opts: ['Ctrl+C then Ctrl+V', 'Ctrl+V then Ctrl+C', 'Ctrl+X then Ctrl+V', 'Ctrl+Z then Ctrl+Y'], ans: 0, xp: 10, feedback: 'Copy (Ctrl+C) then Paste (Ctrl+V) is the standard shortcut sequence.' },
+                { scenario: 'You are creating a budget in a spreadsheet.', q: 'Which formula correctly adds up a column of numbers?', opts: ['=SUM(A1:A10)', '=TOTAL(A1:A10)', '=ADD(A1:A10)', '=COUNT(A1:A10)'], ans: 0, xp: 10, feedback: '=SUM is the standard function for adding a range of cells in most spreadsheet software.' },
+                { scenario: 'You want to freeze the header row so it stays visible while scrolling.', q: 'Where is the "Freeze Panes" option found?', opts: ['View tab', 'Home tab', 'Insert tab', 'Formulas tab'], ans: 0, xp: 10, feedback: 'The "Freeze Panes" option is typically located in the View tab of the ribbon.' },
+                { scenario: 'Your computer is running unusually slow.', q: 'What is a good first step to improve performance?', opts: ['Run Disk Cleanup', 'Reboot the router', 'Reinstall Windows', 'Update the printer driver'], ans: 0, xp: 10, feedback: 'Disk Cleanup removes temporary files and system caches that can slow down your PC.' },
+                { scenario: 'You are installing a new hardware device.', q: 'What should you do after physically connecting the device?', opts: ['Install the necessary drivers', 'Format the hard drive', 'Delete system files', 'Change the BIOS settings'], ans: 0, xp: 10, feedback: 'Installing the correct drivers ensures the hardware communicates properly with the operating system.' }
             ];
         }
 
-        // ─── CCS modules (quizzes) ──────────────────────────────
         function makeCCSQuestions() {
-            return [{
-                scenario: 'You are handling a customer call about a billing issue.',
-                q: 'What is the first step in the call flow?',
-                opts: ['Greet and verify identity', 'Immediately escalate to supervisor', 'Provide the solution',
-                    'Put the customer on hold'
-                ],
-                ans: 0,
-                xp: 10,
-                feedback: 'Always start by greeting the customer and verifying their identity to ensure security and professionalism.'
-            }, {
-                scenario: 'A customer is very upset about a service outage.',
-                q: 'Which de-escalation technique is most effective?',
-                opts: ['Apologize and empathize', 'Argue with the customer', 'Promise a quick fix', 'Transfer the call'],
-                ans: 0,
-                xp: 10,
-                feedback: 'Empathy and apology help calm the customer and build trust, even if you cannot solve the issue immediately.'
-            }, {
-                scenario: 'You need to log a support ticket in the CRM.',
-                q: 'What information is critical to include?',
-                opts: ['Customer name and issue details', 'Only the customer name', 'Your employee ID',
-                    'The date and time'
-                ],
-                ans: 0,
-                xp: 10,
-                feedback: 'Always capture the customer\'s name and a clear description of the issue for proper ticket tracking.'
-            }, {
-                scenario: 'You are reviewing a call for quality assurance.',
-                q: 'Which metric indicates high quality service?',
-                opts: ['First call resolution', 'Long call duration', 'Multiple transfers', 'Customer complained'],
-                ans: 0,
-                xp: 10,
-                feedback: 'First call resolution (FCR) is a key quality indicator that shows efficiency and customer satisfaction.'
-            }, {
-                scenario: 'You are about to start a live call simulation.',
-                q: 'How should you prepare?',
-                opts: ['Review the customer\'s history', 'Mute your microphone', 'Open multiple tabs',
-                    'Start typing immediately'
-                ],
-                ans: 0,
-                xp: 10,
-                feedback: 'Reviewing the customer\'s history helps you provide personalized and efficient service during the call.'
-            }];
+            return [{ scenario: 'You are handling a customer call about a billing issue.', q: 'What is the first step in the call flow?', opts: ['Greet and verify identity', 'Immediately escalate to supervisor', 'Provide the solution', 'Put the customer on hold'], ans: 0, xp: 10, feedback: 'Always start by greeting the customer and verifying their identity to ensure security and professionalism.' },
+                { scenario: 'A customer is very upset about a service outage.', q: 'Which de-escalation technique is most effective?', opts: ['Apologize and empathize', 'Argue with the customer', 'Promise a quick fix', 'Transfer the call'], ans: 0, xp: 10, feedback: 'Empathy and apology help calm the customer and build trust, even if you cannot solve the issue immediately.' },
+                { scenario: 'You need to log a support ticket in the CRM.', q: 'What information is critical to include?', opts: ['Customer name and issue details', 'Only the customer name', 'Your employee ID', 'The date and time'], ans: 0, xp: 10, feedback: 'Always capture the customer\'s name and a clear description of the issue for proper ticket tracking.' },
+                { scenario: 'You are reviewing a call for quality assurance.', q: 'Which metric indicates high quality service?', opts: ['First call resolution', 'Long call duration', 'Multiple transfers', 'Customer complained'], ans: 0, xp: 10, feedback: 'First call resolution (FCR) is a key quality indicator that shows efficiency and customer satisfaction.' },
+                { scenario: 'You are about to start a live call simulation.', q: 'How should you prepare?', opts: ['Review the customer\'s history', 'Mute your microphone', 'Open multiple tabs', 'Start typing immediately'], ans: 0, xp: 10, feedback: 'Reviewing the customer\'s history helps you provide personalized and efficient service during the call.' }
+            ];
         }
 
-        // ─── COMPETENCY MODULES ──────────────────────────────────
-        // ⚠️ System Speed has been REMOVED from the CCS track.
         const COMPETENCY_MODULES = {
-            eim: [{
-                id: 'eim_safety',
-                name: 'Electrical Safety & PPE',
-                icon: '🦺',
-                desc: 'Identify hazards, apply lockout/tagout, and select the correct PPE for electrical work.',
-                type: 'game',
-                gameFile: 'eim-game.html',
-                gameMode: 'code',
-                totalLevels: 5,
-                moduleId: 'eim_safety'
-            }, {
-                id: 'eim_circuit',
-                name: 'Circuit Installation',
-                icon: '🔌',
-                desc: 'Wire series, parallel and combination circuits correctly to light the lamp.',
-                type: 'game',
-                gameFile: 'eim-game.html',
-                gameMode: 'wire',
-                totalLevels: 5,
-                moduleId: 'eim_circuit'
-            }, {
-                id: 'eim_symbols',
-                name: 'Electrical Symbols',
-                icon: '🔍',
-                desc: 'Recognize standard schematic symbols used in circuit diagrams.',
-                type: 'game',
-                gameFile: 'eim-game.html',
-                gameMode: 'symbol',
-                totalLevels: 5,
-                moduleId: 'eim_symbols'
-            }, {
-                id: 'eim_troubleshoot',
-                name: 'Circuit Troubleshooting',
-                icon: '🛠️',
-                desc: 'Inspect broken circuits, diagnose the fault, and apply the correct repair.',
-                type: 'game',
-                gameFile: 'eim-game.html',
-                gameMode: 'fault',
-                totalLevels: 5,
-                moduleId: 'eim_troubleshoot'
-            }],
-            ccs: [{
-                id: 'ccs_script',
-                name: 'Script Savvy',
-                icon: '📋',
-                desc: 'Master call flow and standard phrases.',
-                type: 'game',
-                gameFile: 'ccs-game.html',
-                gameMode: 'script',
-                totalLevels: 5,
-                moduleId: 'ccs_script'
-            }, {
-                id: 'ccs_storm',
-                name: 'Calm the Storm',
-                icon: '🌊',
-                desc: 'De-escalation and empathy skills.',
-                type: 'game',
-                gameFile: 'ccs-game.html',
-                gameMode: 'storm',
-                totalLevels: 5,
-                moduleId: 'ccs_storm'
-            }, {
-                id: 'ccs_quality',
-                name: 'Quality Quest',
-                icon: '⭐',
-                desc: 'QA, compliance and metrics.',
-                type: 'game',
-                gameFile: 'ccs-game.html',
-                gameMode: 'quality',
-                totalLevels: 5,
-                moduleId: 'ccs_quality'
-            }, {
-                id: 'ccs_live',
-                name: 'The Live Call',
-                icon: '🎙️',
-                desc: 'Full simulation assessment.',
-                type: 'game',
-                gameFile: 'ccs-game.html',
-                gameMode: 'live',
-                totalLevels: 5,
-                moduleId: 'ccs_live'
-            }],
-            pcops: [{
-                id: 'pc_ohs',
-                name: 'OHS & Ergonomics',
-                icon: '🛡️',
-                desc: 'Learn computer workstation safety and ergonomics.',
-                type: 'game',
-                gameFile: 'pc-ops-game.html',
-                gameMode: 'ohs',
-                totalLevels: 5,
-                moduleId: 'pc_ohs'
-            }, {
-                id: 'pc_os',
-                name: 'OS & File Management',
-                icon: '📁',
-                desc: 'Master file organization, extensions, and backup procedures.',
-                type: 'game',
-                gameFile: 'pc-ops-game.html',
-                gameMode: 'os',
-                totalLevels: 5,
-                moduleId: 'pc_os'
-            }, {
-                id: 'pc_typing',
-                name: 'Typing & Shortcuts',
-                icon: '⌨️',
-                desc: 'Boost productivity with keyboard shortcuts and text management.',
-                type: 'game',
-                gameFile: 'pc-ops-game.html',
-                gameMode: 'typing',
-                totalLevels: 5,
-                moduleId: 'pc_typing'
-            }, {
-                id: 'pc_spread',
-                name: 'Spreadsheet Ops',
-                icon: '📊',
-                desc: 'Build formulas, format data, and manage worksheets.',
-                type: 'game',
-                gameFile: 'pc-ops-game.html',
-                gameMode: 'spreadsheet',
-                totalLevels: 5,
-                moduleId: 'pc_spread'
-            }, {
-                id: 'pc_maint',
-                name: 'System Maintenance',
-                icon: '🔧',
-                desc: 'Troubleshoot hardware, update drivers, and clean up your system.',
-                type: 'game',
-                gameFile: 'pc-ops-game.html',
-                gameMode: 'maintenance',
-                totalLevels: 5,
-                moduleId: 'pc_maint'
-            }],
+            eim: [{ id: 'eim_safety', name: 'Electrical Safety & PPE', icon: '🦺', desc: 'Identify hazards, apply lockout/tagout, and select the correct PPE for electrical work.', type: 'game', gameFile: 'eim-game.html', gameMode: 'code', totalLevels: 5, moduleId: 'eim_safety' },
+                { id: 'eim_circuit', name: 'Circuit Installation', icon: '🔌', desc: 'Wire series, parallel and combination circuits correctly to light the lamp.', type: 'game', gameFile: 'eim-game.html', gameMode: 'wire', totalLevels: 5, moduleId: 'eim_circuit' },
+                { id: 'eim_symbols', name: 'Electrical Symbols', icon: '🔍', desc: 'Recognize standard schematic symbols used in circuit diagrams.', type: 'game', gameFile: 'eim-game.html', gameMode: 'symbol', totalLevels: 5, moduleId: 'eim_symbols' },
+                { id: 'eim_troubleshoot', name: 'Circuit Troubleshooting', icon: '🛠️', desc: 'Inspect broken circuits, diagnose the fault, and apply the correct repair.', type: 'game', gameFile: 'eim-game.html', gameMode: 'fault', totalLevels: 5, moduleId: 'eim_troubleshoot' }
+            ],
+            ccs: [{ id: 'ccs_script', name: 'Script Savvy', icon: '📋', desc: 'Master call flow and standard phrases.', type: 'game', gameFile: 'ccs-game.html', gameMode: 'script', totalLevels: 5, moduleId: 'ccs_script' },
+                { id: 'ccs_storm', name: 'Calm the Storm', icon: '🌊', desc: 'De-escalation and empathy skills.', type: 'game', gameFile: 'ccs-game.html', gameMode: 'storm', totalLevels: 5, moduleId: 'ccs_storm' },
+                { id: 'ccs_quality', name: 'Quality Quest', icon: '⭐', desc: 'QA, compliance and metrics.', type: 'game', gameFile: 'ccs-game.html', gameMode: 'quality', totalLevels: 5, moduleId: 'ccs_quality' },
+                { id: 'ccs_live', name: 'The Live Call', icon: '🎙️', desc: 'Full simulation assessment.', type: 'game', gameFile: 'ccs-game.html', gameMode: 'live', totalLevels: 5, moduleId: 'ccs_live' }
+            ],
+            pcops: [{ id: 'pc_ohs', name: 'OHS & Ergonomics', icon: '🛡️', desc: 'Learn computer workstation safety and ergonomics.', type: 'game', gameFile: 'pc-ops-game.html', gameMode: 'ohs', totalLevels: 5, moduleId: 'pc_ohs' },
+                { id: 'pc_os', name: 'OS & File Management', icon: '📁', desc: 'Master file organization, extensions, and backup procedures.', type: 'game', gameFile: 'pc-ops-game.html', gameMode: 'os', totalLevels: 5, moduleId: 'pc_os' },
+                { id: 'pc_typing', name: 'Typing & Shortcuts', icon: '⌨️', desc: 'Boost productivity with keyboard shortcuts and text management.', type: 'game', gameFile: 'pc-ops-game.html', gameMode: 'typing', totalLevels: 5, moduleId: 'pc_typing' },
+                { id: 'pc_spread', name: 'Spreadsheet Ops', icon: '📊', desc: 'Build formulas, format data, and manage worksheets.', type: 'game', gameFile: 'pc-ops-game.html', gameMode: 'spreadsheet', totalLevels: 5, moduleId: 'pc_spread' },
+                { id: 'pc_maint', name: 'System Maintenance', icon: '🔧', desc: 'Troubleshoot hardware, update drivers, and clean up your system.', type: 'game', gameFile: 'pc-ops-game.html', gameMode: 'maintenance', totalLevels: 5, moduleId: 'pc_maint' }
+            ],
         };
 
-        // ─── TRACK-SPECIFIC BADGES ──────────────────────────────────
-        // ⚠️ System Speed badge has been REMOVED from CCS.
         const BADGES_DEF = {
             all: [
-                { id: 'first_blood', icon: '🩸', name: 'First Steps', desc: 'Complete your very first question correctly.',
-                    condition: (s) => s.totalCorrect >= 1 },
-                { id: 'sharpshooter', icon: '🎯', name: 'Sharpshooter', desc: 'Score 100% on any module.',
-                    condition: (s) => s.perfectModules >= 1 },
-                { id: 'persistent', icon: '💪', name: 'Persistent', desc: 'Complete 3 modules (any result).',
-                    condition: (s) => s.modulesCompleted >= 3 },
-                { id: 'speed_demon', icon: '⚡', name: 'Speed Demon', desc: 'Answer 10 questions within the time limit.',
-                    condition: (s) => s.timedCorrect >= 10 },
-                { id: 'nc_ready', icon: '🎓', name: 'NC Ready', desc: 'Pass every module in your track (≥70%).',
-                    condition: (s) => s.passedInTrack >= (COMPETENCY_MODULES[s.track]?.length || 3) },
-                { id: 'xp_100', icon: '🌟', name: 'Rising Star', desc: 'Earn 100 XP total.',
-                condition: (s) => s.xp >= 100 },
-                { id: 'xp_500', icon: '🔥', name: 'On Fire', desc: 'Earn 500 XP total.',
-                condition: (s) => s.xp >= 500 },
-                { id: 'level5', icon: '👑', name: 'Champion', desc: 'Reach Level 5.',
-                condition: (s) => s.level >= 5 },
+                { id: 'first_blood', icon: '🩸', name: 'First Steps', desc: 'Complete your very first question correctly.', condition: (s) => s.totalCorrect >= 1 },
+                { id: 'sharpshooter', icon: '🎯', name: 'Sharpshooter', desc: 'Score 100% on any module.', condition: (s) => s.perfectModules >= 1 },
+                { id: 'persistent', icon: '💪', name: 'Persistent', desc: 'Complete 3 modules (any result).', condition: (s) => s.modulesCompleted >= 3 },
+                { id: 'speed_demon', icon: '⚡', name: 'Speed Demon', desc: 'Answer 10 questions within the time limit.', condition: (s) => s.timedCorrect >= 10 },
+                { id: 'nc_ready', icon: '🎓', name: 'NC Ready', desc: 'Pass every module in your track (≥70%).', condition: (s) => s.passedInTrack >= (COMPETENCY_MODULES[s.track]?.length || 3) },
+                { id: 'xp_100', icon: '🌟', name: 'Rising Star', desc: 'Earn 100 XP total.', condition: (s) => s.xp >= 100 },
+                { id: 'xp_500', icon: '🔥', name: 'On Fire', desc: 'Earn 500 XP total.', condition: (s) => s.xp >= 500 },
+                { id: 'level5', icon: '👑', name: 'Champion', desc: 'Reach Level 5.', condition: (s) => s.level >= 5 },
             ],
-            eim: [
-                { id: 'badge_eim_safety', icon: '🦺', name: 'Safety Certified', desc: 'Pass EIM Safety & PPE (≥70%).',
-                    condition: (s) => (s.modules['eim_safety']?.lastPct || 0) >= 70 },
-                { id: 'badge_eim_circuit', icon: '🔌', name: 'Circuit Builder', desc: 'Pass EIM Circuit Installation (≥70%).',
-                    condition: (s) => (s.modules['eim_circuit']?.lastPct || 0) >= 70 },
-                { id: 'badge_eim_symbols', icon: '🔍', name: 'Symbol Master', desc: 'Pass EIM Electrical Symbols (≥70%).',
-                    condition: (s) => (s.modules['eim_symbols']?.lastPct || 0) >= 70 },
-                { id: 'badge_eim_troubleshoot', icon: '🛠️', name: 'Fault Finder', desc: 'Pass EIM Circuit Troubleshooting (≥70%).',
-                    condition: (s) => (s.modules['eim_troubleshoot']?.lastPct || 0) >= 70 },
+            eim: [{ id: 'badge_eim_safety', icon: '🦺', name: 'Safety Certified', desc: 'Pass EIM Safety & PPE (≥70%).', condition: (s) => (s.modules['eim_safety']?.lastPct || 0) >= 70 },
+                { id: 'badge_eim_circuit', icon: '🔌', name: 'Circuit Builder', desc: 'Pass EIM Circuit Installation (≥70%).', condition: (s) => (s.modules['eim_circuit']?.lastPct || 0) >= 70 },
+                { id: 'badge_eim_symbols', icon: '🔍', name: 'Symbol Master', desc: 'Pass EIM Electrical Symbols (≥70%).', condition: (s) => (s.modules['eim_symbols']?.lastPct || 0) >= 70 },
+                { id: 'badge_eim_troubleshoot', icon: '🛠️', name: 'Fault Finder', desc: 'Pass EIM Circuit Troubleshooting (≥70%).', condition: (s) => (s.modules['eim_troubleshoot']?.lastPct || 0) >= 70 },
             ],
-            ccs: [
-                { id: 'badge_ccs_script', icon: '📋', name: 'Script Savvy', desc: 'Pass CCS Script Savvy (≥70%).',
-                    condition: (s) => (s.modules['ccs_script']?.lastPct || 0) >= 70 },
-                { id: 'badge_ccs_storm', icon: '🌊', name: 'Storm Calmer', desc: 'Pass CCS Calm the Storm (≥70%).',
-                    condition: (s) => (s.modules['ccs_storm']?.lastPct || 0) >= 70 },
-                { id: 'badge_ccs_quality', icon: '⭐', name: 'Quality Star', desc: 'Pass CCS Quality Quest (≥70%).',
-                    condition: (s) => (s.modules['ccs_quality']?.lastPct || 0) >= 70 },
-                { id: 'badge_ccs_live', icon: '🎙️', name: 'Call Hero', desc: 'Pass CCS The Live Call (≥70%).',
-                    condition: (s) => (s.modules['ccs_live']?.lastPct || 0) >= 70 },
+            ccs: [{ id: 'badge_ccs_script', icon: '📋', name: 'Script Savvy', desc: 'Pass CCS Script Savvy (≥70%).', condition: (s) => (s.modules['ccs_script']?.lastPct || 0) >= 70 },
+                { id: 'badge_ccs_storm', icon: '🌊', name: 'Storm Calmer', desc: 'Pass CCS Calm the Storm (≥70%).', condition: (s) => (s.modules['ccs_storm']?.lastPct || 0) >= 70 },
+                { id: 'badge_ccs_quality', icon: '⭐', name: 'Quality Star', desc: 'Pass CCS Quality Quest (≥70%).', condition: (s) => (s.modules['ccs_quality']?.lastPct || 0) >= 70 },
+                { id: 'badge_ccs_live', icon: '🎙️', name: 'Call Hero', desc: 'Pass CCS The Live Call (≥70%).', condition: (s) => (s.modules['ccs_live']?.lastPct || 0) >= 70 },
             ],
-            pcops: [
-                { id: 'badge_pc_ohs', icon: '🛡️', name: 'Safety Savvy', desc: 'Pass PC OHS & Ergonomics (≥70%).',
-                    condition: (s) => (s.modules['pc_ohs']?.lastPct || 0) >= 70 },
-                { id: 'badge_pc_os', icon: '📁', name: 'File Master', desc: 'Pass PC OS & File Management (≥70%).',
-                    condition: (s) => (s.modules['pc_os']?.lastPct || 0) >= 70 },
-                { id: 'badge_pc_typing', icon: '⌨️', name: 'Keyboard Ninja', desc: 'Pass PC Typing & Shortcuts (≥70%).',
-                    condition: (s) => (s.modules['pc_typing']?.lastPct || 0) >= 70 },
-                { id: 'badge_pc_spread', icon: '📊', name: 'Spreadsheet Pro', desc: 'Pass PC Spreadsheet Ops (≥70%).',
-                    condition: (s) => (s.modules['pc_spread']?.lastPct || 0) >= 70 },
-                { id: 'badge_pc_maint', icon: '🔧', name: 'Tech Fixer', desc: 'Pass PC System Maintenance (≥70%).',
-                    condition: (s) => (s.modules['pc_maint']?.lastPct || 0) >= 70 },
+            pcops: [{ id: 'badge_pc_ohs', icon: '🛡️', name: 'Safety Savvy', desc: 'Pass PC OHS & Ergonomics (≥70%).', condition: (s) => (s.modules['pc_ohs']?.lastPct || 0) >= 70 },
+                { id: 'badge_pc_os', icon: '📁', name: 'File Master', desc: 'Pass PC OS & File Management (≥70%).', condition: (s) => (s.modules['pc_os']?.lastPct || 0) >= 70 },
+                { id: 'badge_pc_typing', icon: '⌨️', name: 'Keyboard Ninja', desc: 'Pass PC Typing & Shortcuts (≥70%).', condition: (s) => (s.modules['pc_typing']?.lastPct || 0) >= 70 },
+                { id: 'badge_pc_spread', icon: '📊', name: 'Spreadsheet Pro', desc: 'Pass PC Spreadsheet Ops (≥70%).', condition: (s) => (s.modules['pc_spread']?.lastPct || 0) >= 70 },
+                { id: 'badge_pc_maint', icon: '🔧', name: 'Tech Fixer', desc: 'Pass PC System Maintenance (≥70%).', condition: (s) => (s.modules['pc_maint']?.lastPct || 0) >= 70 },
             ]
         };
 
@@ -1971,7 +1741,6 @@
         }
 
         const XP_PER_LEVEL = [0, 100, 250, 450, 700, 1000, 1400, 1900, 2500, 3200];
-
         const MOCK_LEADERBOARD = [
             { name: 'Maria Santos', track: 'eim', xp: 840, level: 5 },
             { name: 'Jose Reyes', track: 'ccs', xp: 720, level: 4 },
@@ -1994,18 +1763,11 @@
 
         function initState(track, name, id) {
             return {
-                name,
-                id,
-                track,
-                xp: 0,
-                level: 1,
-                modules: {},
-                badges: [],
-                totalCorrect: 0,
-                perfectModules: 0,
-                modulesCompleted: 0,
-                timedCorrect: 0,
-                passedInTrack: 0,
+                name, id, track,
+                xp: 0, level: 1,
+                modules: {}, badges: [],
+                totalCorrect: 0, perfectModules: 0, modulesCompleted: 0,
+                timedCorrect: 0, passedInTrack: 0,
                 history: [],
             };
         }
@@ -2014,7 +1776,6 @@
         // BACKEND API
         // ══════════════════════════════════════════
         const API_BASE = window.SKILLQUEST_API_BASE || 'https://skillquest-api-llyp.onrender.com/api';
-
         let authToken = null;
         let currentUser = null;
 
@@ -2132,17 +1893,14 @@
             }
         }
 
-        // ✅ Opens the logout confirmation modal
         function confirmLogout() {
             document.getElementById('logout-modal').style.display = 'flex';
         }
 
-        // ✅ Closes the logout confirmation modal
         function closeLogoutModal() {
             document.getElementById('logout-modal').style.display = 'none';
         }
 
-        // ✅ Actually logs out (only called when user clicks "Yes, Log Out")
         function doLogout() {
             document.getElementById('logout-modal').style.display = 'none';
             clearInterval(quizTimer);
@@ -2315,16 +2073,9 @@
                 saveSession();
                 if (role === 'trainee') {
                     state = progressToState(currentUser, {
-                        xp: 0,
-                        level: 1,
-                        modules: {},
-                        badges: [],
-                        totalCorrect: 0,
-                        perfectModules: 0,
-                        modulesCompleted: 0,
-                        timedCorrect: 0,
-                        passedInTrack: 0,
-                        history: [],
+                        xp: 0, level: 1, modules: {}, badges: [],
+                        totalCorrect: 0, perfectModules: 0, modulesCompleted: 0,
+                        timedCorrect: 0, passedInTrack: 0, history: [],
                     });
                     state.track = actualTrack;
                     updateHUD();
@@ -2401,7 +2152,7 @@
             <div class="section-title">Trainee Results (${trainees.length})</div>
             <div style="display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap;">
               ${tabs.map(([val, label]) => `
-                <button class="btn ${((activeTrack||'')===val) ? 'btn-primary' : 'btn-secondary'}" style="padding:8px 16px;font-size:13px;"
+                <button class="btn ${((activeTrack||'')===val) ? 'btn-primary' : 'btn-secondary'}" style="padding:8px 16px;font-size:13px;flex:0 1 auto;"
                   onclick="openTrainerDashboard(${val ? `'${val}'` : 'undefined'})">${label}</button>
               `).join('')}
             </div>
