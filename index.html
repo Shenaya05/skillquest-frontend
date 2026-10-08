@@ -1430,6 +1430,8 @@
             border-color: var(--accent1);
         }
     </style>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0b1020">
 </head>
 <body>
 
@@ -2789,5 +2791,8 @@
             switchTab(previousTab);
         }
     </script>
+<script>
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
+ </script>
 </body>
 </html>
