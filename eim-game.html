@@ -3875,6 +3875,16 @@
             startSafetyGame();
         });
 
+        function updateSafetyCount() {
+            if (safetySubmitted) return;
+            const cfg = SAFETY_CONFIGS[state.code.level];
+            if (!cfg) return;
+            const need = cfg.correctPPE.length;
+            const fb = document.getElementById('safetyFeedback');
+            fb.textContent = `Select ${need} correct PPE items (${safetySelected.size}/${need} selected).`;
+            fb.className = 'safety-feedback-text info';
+        }
+
         function startSafetyGame() {
             safetySelected = new Set();
             safetySubmitted = false;
@@ -3917,13 +3927,13 @@
                     } else {
                         safetySelected.delete(item);
                     }
+                    updateSafetyCount();
                 });
                 grid.appendChild(el);
             });
 
             const fb = document.getElementById('safetyFeedback');
-            fb.textContent = 'Select the required PPE items for this hazard.';
-            fb.className = 'safety-feedback-text info';
+            updateSafetyCount();
 
             document.getElementById('safetySubmitBtn').textContent = '✅ CHECK';
             document.getElementById('safetySubmitBtn').disabled = false;
