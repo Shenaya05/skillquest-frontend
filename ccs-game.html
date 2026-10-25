@@ -587,6 +587,7 @@
             return { earned, max, pct: max ? Math.round(earned / max * 100) : 0 };
         }
         function showOutOfHearts(game, overlayId, p, hideScore) {
+            if (!transition(game, 'FAIL')) return;
             stopTimer();
             if (state[game] && 'problem' in state[game]) state[game].problem = 0;
             const g = id => document.getElementById(p + id);
@@ -613,6 +614,30 @@
             seconds: 0,
         };
         const PROBLEMS_PER_LEVEL = 4;
+
+        // ━━━ FINITE STATE MACHINE (one phase per game) ━━━
+        // SELECT → INSTRUCTIONS → PLAYING ⇄ PROBLEM_DONE → COMPLETE | GAME_OVER
+        // Phase changes ONLY through transition(); illegal events are ignored.
+        const GAME_FSM = {
+            SELECT:       { START: 'INSTRUCTIONS' },
+            INSTRUCTIONS: { PLAY: 'PLAYING', BACK: 'SELECT' },
+            PLAYING:      { SOLVED: 'PROBLEM_DONE', PASS: 'COMPLETE', FAIL: 'GAME_OVER', RESTART: 'PLAYING', EXIT: 'SELECT' },
+            PROBLEM_DONE: { NEXT_PROBLEM: 'PLAYING', EXIT: 'SELECT' },
+            COMPLETE:     { REPLAY: 'PLAYING', NEXT: 'SELECT', EXIT: 'SELECT' },
+            GAME_OVER:    { RETRY: 'PLAYING', EXIT: 'SELECT' }
+        };
+        ['script', 'storm', 'quality', 'live'].forEach(g => { state[g].phase = 'SELECT'; });
+        function transition(game, ev) {
+            const next = GAME_FSM[state[game].phase]?.[ev];
+            if (!next) return false;
+            state[game].phase = next;
+            return true;
+        }
+        // replay-button event comes from the phase, never from the button label
+        function replayEvent(game) {
+            const ph = state[game].phase;
+            return ph === 'GAME_OVER' ? 'RETRY' : ph === 'COMPLETE' ? 'REPLAY' : 'RESTART';
+        }
 
         // LEVEL DATA
         const SCRIPT_LEVELS = [
@@ -808,9 +833,10 @@
                 const isActive = (idx === current);
                 if (isDone) div.classList.add('completed');
                 if (isActive) div.classList.add('active');
-                if (idx > current + 1) div.classList.add('locked');
+                const unlocked = idx === 0 || completed.has(levels[idx - 1].id);
+                if (!unlocked) div.classList.add('locked');
                 div.innerHTML = `<div class="num">${lv.id}</div><div class="name">${lv.name}</div><div class="stars">${levelHeartsStr(container.id.replace('LevelGrid', ''), lv.id, isDone)}</div>`;
-                if (idx <= current + 1 && !isDone) {
+                if (unlocked && !isDone) {
                     div.style.cursor = 'pointer';
                     div.addEventListener('click', () => {
                         const all = container.querySelectorAll('.level-card');
@@ -873,6 +899,7 @@
                     if ('speechSynthesis' in window) window.speechSynthesis.cancel();
                     showScreen('screen-main');
                     ['script', 'storm', 'quality', 'live'].forEach(m => {
+                        state[m].phase = 'SELECT';
                         const el = document.getElementById(m + '-select');
                         if (el) el.style.display = '';
                         const instr = document.getElementById(m + '-instructions');
@@ -907,6 +934,7 @@
         let scriptSteps = [], scriptPlaced = [];
 
         function initScriptSavvy() {
+            state.script.phase = 'SELECT';
             renderLevelGrid(document.getElementById('scriptLevelGrid'), SCRIPT_LEVELS, state.script.completed, state.script.level);
             document.getElementById('script-select').style.display = '';
             document.getElementById('script-instructions').style.display = 'none';
@@ -917,6 +945,7 @@
         document.getElementById('scriptStartBtn').addEventListener('click', () => {
             const data = SCRIPT_LEVELS[state.script.level];
             if (!data) return;
+            if (!transition('script', 'START')) return;
             state.script.problem = 0;
             document.getElementById('script-select').style.display = 'none';
             document.getElementById('script-instructions').style.display = '';
@@ -925,6 +954,7 @@
         });
 
         document.getElementById('scriptPlayBtn').addEventListener('click', () => {
+            if (!transition('script', 'PLAY')) return;
             heartsFresh = true;
             document.getElementById('script-instructions').style.display = 'none';
             document.getElementById('script-game').style.display = '';
@@ -1050,6 +1080,7 @@
         });
 
         document.getElementById('scriptCheckBtn').addEventListener('click', () => {
+            if (state.script.phase !== 'PLAYING') return;
             const total = scriptSteps.length;
             if (scriptPlaced.includes(null)) {
                 const fb = document.getElementById('scriptFeedback');
@@ -1098,6 +1129,7 @@
         let scriptLevelJustCompleted = false;
 
         function showScriptComplete(success, levelComplete) {
+            if (success && !transition('script', levelComplete ? 'PASS' : 'SOLVED')) return;
             SFX.play(levelComplete ? 'fanfare' : 'correct');
             stopTimer();
             const fb = document.getElementById('scriptFeedback');
@@ -1133,12 +1165,14 @@
         }
 
         document.getElementById('scriptFbReplay').addEventListener('click', () => {
+            if (!transition('script', replayEvent('script'))) return;
             { const t = document.getElementById('scriptFbReplay').textContent; if (t === '↻ REPLAY' || t === '↻ RETRY LEVEL') heartsFresh = true; }
             document.getElementById('scriptFeedback').classList.remove('show');
             startScriptGame();
         });
 
         document.getElementById('scriptFbNext').addEventListener('click', () => {
+            if (!transition('script', state.script.phase === 'PROBLEM_DONE' ? 'NEXT_PROBLEM' : 'NEXT')) return;
             document.getElementById('scriptFeedback').classList.remove('show');
             if (!scriptLevelJustCompleted) { startScriptGame(); return; }
             if (state.script.level < SCRIPT_LEVELS.length - 1) {
@@ -1158,6 +1192,7 @@
         let stormSelected = -1;
 
         function initCalmTheStorm() {
+            state.storm.phase = 'SELECT';
             renderLevelGrid(document.getElementById('stormLevelGrid'), STORM_LEVELS, state.storm.completed, state.storm.level);
             document.getElementById('storm-select').style.display = '';
             document.getElementById('storm-instructions').style.display = 'none';
@@ -1168,6 +1203,7 @@
         document.getElementById('stormStartBtn').addEventListener('click', () => {
             const data = STORM_LEVELS[state.storm.level];
             if (!data) return;
+            if (!transition('storm', 'START')) return;
             state.storm.problem = 0;
             document.getElementById('storm-select').style.display = 'none';
             document.getElementById('storm-instructions').style.display = '';
@@ -1176,6 +1212,7 @@
         });
 
         document.getElementById('stormPlayBtn').addEventListener('click', () => {
+            if (!transition('storm', 'PLAY')) return;
             heartsFresh = true;
             document.getElementById('storm-instructions').style.display = 'none';
             document.getElementById('storm-game').style.display = '';
@@ -1216,6 +1253,7 @@
         }
 
         document.getElementById('stormSubmitBtn').addEventListener('click', () => {
+            if (state.storm.phase !== 'PLAYING') return;
             if (stormAnswered) return;
             const lv = state.storm.level;
             const data = STORM_DATA[lv] && STORM_DATA[lv][state.storm.problem];
@@ -1265,6 +1303,7 @@
         let stormLevelJustCompleted = false;
 
         function showStormComplete(success, levelComplete) {
+            if (success && !transition('storm', levelComplete ? 'PASS' : 'SOLVED')) return;
             SFX.play(levelComplete ? 'fanfare' : 'correct');
             stopTimer();
             const fb = document.getElementById('stormFeedbackOverlay');
@@ -1297,12 +1336,14 @@
         }
 
         document.getElementById('stormFbReplay').addEventListener('click', () => {
+            if (!transition('storm', replayEvent('storm'))) return;
             { const t = document.getElementById('stormFbReplay').textContent; if (t === '↻ REPLAY' || t === '↻ RETRY LEVEL') heartsFresh = true; }
             document.getElementById('stormFeedbackOverlay').classList.remove('show');
             startStormGame();
         });
 
         document.getElementById('stormFbNext').addEventListener('click', () => {
+            if (!transition('storm', state.storm.phase === 'PROBLEM_DONE' ? 'NEXT_PROBLEM' : 'NEXT')) return;
             document.getElementById('stormFeedbackOverlay').classList.remove('show');
             if (!stormLevelJustCompleted) { startStormGame(); return; }
             if (state.storm.level < STORM_LEVELS.length - 1) {
@@ -1322,6 +1363,7 @@
         let qualitySelected = -1;
 
         function initQualityQuest() {
+            state.quality.phase = 'SELECT';
             renderLevelGrid(document.getElementById('qualityLevelGrid'), QUALITY_LEVELS, state.quality.completed, state.quality.level);
             document.getElementById('quality-select').style.display = '';
             document.getElementById('quality-instructions').style.display = 'none';
@@ -1332,6 +1374,7 @@
         document.getElementById('qualityStartBtn').addEventListener('click', () => {
             const data = QUALITY_LEVELS[state.quality.level];
             if (!data) return;
+            if (!transition('quality', 'START')) return;
             state.quality.problem = 0;
             document.getElementById('quality-select').style.display = 'none';
             document.getElementById('quality-instructions').style.display = '';
@@ -1340,6 +1383,7 @@
         });
 
         document.getElementById('qualityPlayBtn').addEventListener('click', () => {
+            if (!transition('quality', 'PLAY')) return;
             heartsFresh = true;
             document.getElementById('quality-instructions').style.display = 'none';
             document.getElementById('quality-game').style.display = '';
@@ -1376,6 +1420,7 @@
         }
 
         document.getElementById('qualitySubmitBtn').addEventListener('click', () => {
+            if (state.quality.phase !== 'PLAYING') return;
             if (qualityAnswered) return;
             const lv = state.quality.level;
             const data = QUALITY_DATA[lv] && QUALITY_DATA[lv][state.quality.problem];
@@ -1429,6 +1474,7 @@
         let qualityLevelJustCompleted = false;
 
         function showQualityComplete(success, levelComplete) {
+            if (success && !transition('quality', levelComplete ? 'PASS' : 'SOLVED')) return;
             SFX.play(levelComplete ? 'fanfare' : 'correct');
             stopTimer();
             const fb = document.getElementById('qualityFeedback');
@@ -1461,6 +1507,7 @@
         }
 
         document.getElementById('qualityFbReplay').addEventListener('click', () => {
+            if (!transition('quality', replayEvent('quality'))) return;
             { const t = document.getElementById('qualityFbReplay').textContent; if (t === '↻ REPLAY' || t === '↻ RETRY LEVEL') heartsFresh = true; }
             document.getElementById('qualityFeedback').classList.remove('show');
             if (document.getElementById('qualityFbReplay').textContent === '↻ OK' || document.getElementById('qualityFbReplay').textContent === '↻ TRY AGAIN') {
@@ -1472,6 +1519,7 @@
         });
 
         document.getElementById('qualityFbNext').addEventListener('click', () => {
+            if (!transition('quality', state.quality.phase === 'PROBLEM_DONE' ? 'NEXT_PROBLEM' : 'NEXT')) return;
             document.getElementById('qualityFeedback').classList.remove('show');
             if (!qualityLevelJustCompleted) { startQualityGame(); return; }
             if (state.quality.level < QUALITY_LEVELS.length - 1) {
@@ -1510,6 +1558,7 @@
         }
 
         function initLiveCall() {
+            state.live.phase = 'SELECT';
             const grid = document.getElementById('liveCallGrid');
             grid.innerHTML = '';
             LIVE_CALL_DATA.forEach((call, idx) => {
@@ -1542,6 +1591,7 @@
         document.getElementById('liveStartBtn').addEventListener('click', () => {
             const call = LIVE_CALL_DATA[state.live.scenario];
             if (!call) return;
+            if (!transition('live', 'START')) return;
             document.getElementById('live-select').style.display = 'none';
             document.getElementById('live-instructions').style.display = '';
             document.getElementById('liveInstrObj').textContent = `🎙️ ${call.icon} ${call.title}`;
@@ -1551,6 +1601,7 @@
         });
 
         document.getElementById('livePlayBtn').addEventListener('click', () => {
+            if (!transition('live', 'PLAY')) return;
             document.getElementById('live-instructions').style.display = 'none';
             document.getElementById('live-game').style.display = '';
             startLiveCall();
@@ -1611,6 +1662,7 @@
         });
 
         document.getElementById('liveSubmitBtn').addEventListener('click', () => {
+            if (state.live.phase !== 'PLAYING') return;
             if (liveAnswered) return;
             const data = liveCurrentTurn;
             if (!data) return;
@@ -1640,6 +1692,7 @@
             fb.className = 'scenario-feedback ' + (correct ? 'success' : 'error');
 
             setTimeout(() => {
+                if (state.live.phase !== 'PLAYING') return;
                 const call = LIVE_CALL_DATA[state.live.scenario];
                 state.live.turn++;
                 if (state.live.turn < call.turns.length && hearts.cur > 0) renderLiveTurn();
@@ -1653,6 +1706,7 @@
             const totalTurns = call.turns.length;
             const pct = Math.round((liveCorrectCount / totalTurns) * 100);
             const passed = pct >= 60 && hearts.cur > 0;
+            if (!transition('live', passed ? 'PASS' : 'FAIL')) return;
             if (passed) SFX.play('fanfare'); else if (hearts.cur > 0) SFX.play('gameover');
             if (passed) { state.live.completed.add(state.live.scenario); keepHearts('live', state.live.scenario); }
             updateMainMenu();
@@ -1681,12 +1735,14 @@
         }
 
         document.getElementById('liveFbReplay').addEventListener('click', () => {
+            if (!transition('live', state.live.phase === 'GAME_OVER' ? 'RETRY' : 'REPLAY')) return;
             document.getElementById('liveFeedbackOverlay').classList.remove('show');
             document.getElementById('live-game').style.display = '';
             startLiveCall();
         });
 
         document.getElementById('liveFbNext').addEventListener('click', () => {
+            if (!transition('live', state.live.phase === 'GAME_OVER' ? 'EXIT' : 'NEXT')) return;
             document.getElementById('liveFeedbackOverlay').classList.remove('show');
             document.getElementById('live-game').style.display = 'none';
             document.getElementById('live-select').style.display = '';
