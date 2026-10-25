@@ -2036,6 +2036,7 @@
             return { earned, max, pct: max ? Math.round(earned / max * 100) : 0 };
         }
         function showOutOfHearts(game, overlayId, p, hideScore) {
+            if (!transition(game, 'FAIL')) return;
             stopTimer();
             if (state[game] && 'problem' in state[game]) state[game].problem = 0;
             const g = id => document.getElementById(p + id);
@@ -2062,6 +2063,25 @@
             seconds: 0,
             wireClueUsed: false,
         };
+
+        // ━━━ FINITE STATE MACHINE (one phase per game) ━━━
+        // SELECT → INSTRUCTIONS → PLAYING → COMPLETE | GAME_OVER
+        // Phase changes ONLY through transition(); illegal events are ignored.
+        const GAME_FSM = {
+            SELECT:       { START: 'INSTRUCTIONS' },
+            INSTRUCTIONS: { PLAY: 'PLAYING', BACK: 'SELECT' },
+            PLAYING:      { PASS: 'COMPLETE', FAIL: 'GAME_OVER', RESTART: 'PLAYING', EXIT: 'SELECT' },
+            COMPLETE:     { REPLAY: 'PLAYING', NEXT: 'SELECT', FINISH: 'PROGRESS', EXIT: 'SELECT' },
+            GAME_OVER:    { RETRY: 'PLAYING', EXIT: 'SELECT' },
+            PROGRESS:     { EXIT: 'SELECT' }
+        };
+        ['symbol', 'wire', 'fault', 'code'].forEach(g => { state[g].phase = 'SELECT'; });
+        function transition(game, ev) {
+            const next = GAME_FSM[state[game].phase]?.[ev];
+            if (!next) return false;
+            state[game].phase = next;
+            return true;
+        }
 
         // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
         // EMBEDDED MODE — lets SkillQuest load a single module
@@ -2550,10 +2570,11 @@
                 const isActive = (idx === current);
                 if (isDone) div.classList.add('completed');
                 if (isActive) div.classList.add('active');
-                if (idx > current + 1) div.classList.add('locked');
+                const unlocked = idx === 0 || completed.has(levels[idx - 1].id);
+                if (!unlocked) div.classList.add('locked');
                 div.innerHTML =
                     `<div class="num">${lv.id}</div><div class="name">${lv.name}</div><div class="stars">${levelHeartsStr(container.id.replace('LevelGrid', ''), lv.id, isDone)}</div>`;
-                if (idx <= current + 1 && !isDone) {
+                if (unlocked && !isDone) {
                     div.style.cursor = 'pointer';
                     div.addEventListener('click', () => {
                         const all = container.querySelectorAll('.level-card');
@@ -2636,6 +2657,7 @@
                 if (target === 'main') {
                     showScreen('screen-main');
                     ['symbol', 'wire', 'fault', 'code'].forEach(m => {
+                        state[m].phase = 'SELECT';
                         const el = document.getElementById(m + '-select');
                         if (el) el.style.display = '';
                         const instr = document.getElementById(m + '-instructions');
@@ -2677,6 +2699,7 @@
             symbolDragData = null;
 
         function initSymbolSavvy() {
+            state.symbol.phase = 'SELECT';
             const container = document.getElementById('symbolLevelGrid');
             renderLevelGrid(container, SYMBOL_LEVELS, state.symbol.completed, state.symbol.level);
             document.getElementById('symbol-select').style.display = '';
@@ -2690,6 +2713,7 @@
             const lv = state.symbol.level;
             const data = SYMBOL_LEVELS[lv];
             if (!data) return;
+            if (!transition('symbol', 'START')) return;
             document.getElementById('symbol-select').style.display = 'none';
             document.getElementById('symbol-instructions').style.display = '';
             document.getElementById('symbolInstrObj').textContent = `🎯 Level ${data.id}: ${data.name}`;
@@ -2697,6 +2721,7 @@
         });
 
         document.getElementById('symbolPlayBtn').addEventListener('click', () => {
+            if (!transition('symbol', 'PLAY')) return;
             document.getElementById('symbol-instructions').style.display = 'none';
             document.getElementById('symbol-game').style.display = '';
             startSymbolGame();
@@ -2851,6 +2876,7 @@
         }
 
         function checkSymbolAnswers() {
+            if (state.symbol.phase !== 'PLAYING') return;
             let allCorrect = true;
             const total = symbolPairs.length;
             
@@ -2956,6 +2982,7 @@
         });
 
         function showSymbolComplete(success) {
+            if (success && !transition('symbol', 'PASS')) return;
             stopTimer();
             const fb = document.getElementById('symbolFeedback');
             if (success) {
@@ -2966,6 +2993,7 @@
                 document.getElementById('symbolFbSub').textContent = 'You identified all symbols correctly!';
                 document.getElementById('symbolFbScore').innerHTML =
                     `<div class="row"><span class="label">Hearts Left</span><span class="hearts-row">${heartsStr()}</span></div><div class="row"><span class="label">Time Bonus</span><span>+${Math.max(0, 60 - state.seconds)} XP</span></div><div class="row"><span class="label">Accuracy Bonus</span><span>+30 XP</span></div><div class="row"><span class="label">TOTAL XP</span><span class="text-glow" style="color:#f5a623;">${xp + 30} XP</span></div>`;
+                document.getElementById('symbolFbReplay').textContent = '↻ REPLAY';
                 state.symbol.completed.add(SYMBOL_LEVELS[state.symbol.level].id);
                 keepHearts('symbol', SYMBOL_LEVELS[state.symbol.level].id);
                 notifyEimProgress('symbol', SYMBOL_LEVELS, xp + 30);
@@ -2975,11 +3003,14 @@
             fb.classList.add('show');
         }
 
-        document.getElementById('symbolFbReplay').addEventListener('click', () => { document.getElementById(
-                'symbolFeedback').classList.remove('show');
+        document.getElementById('symbolFbReplay').addEventListener('click', () => {
+            if (!transition('symbol', state.symbol.phase === 'GAME_OVER' ? 'RETRY' : 'REPLAY')) return;
+            document.getElementById('symbolFeedback').classList.remove('show');
             startSymbolGame(); });
 
         document.getElementById('symbolFbNext').addEventListener('click', () => {
+            const lastSymbol = !(state.symbol.level < SYMBOL_LEVELS.length - 1);
+            if (!transition('symbol', lastSymbol ? 'FINISH' : 'NEXT')) return;
             document.getElementById('symbolFeedback').classList.remove('show');
             if (state.symbol.level < SYMBOL_LEVELS.length - 1) {
                 state.symbol.level++;
@@ -2994,7 +3025,7 @@
             }
         });
 
-        document.getElementById('symbolProgressBack').addEventListener('click', () => { showScreen('screen-main');
+        document.getElementById('symbolProgressBack').addEventListener('click', () => { transition('symbol', 'EXIT'); showScreen('screen-main');
             document.getElementById('symbol-progress').style.display = 'none';
             document.getElementById('symbol-select').style.display = ''; });
 
@@ -3031,6 +3062,7 @@
         });
 
         function initWireWizard() {
+            state.wire.phase = 'SELECT';
             const status = getUnlockStatus();
             if (!status.wire.unlocked) { showScreen('screen-main'); return; }
             const container = document.getElementById('wireLevelGrid');
@@ -3046,6 +3078,7 @@
             const lv = state.wire.level;
             const data = WIRE_LEVELS[lv];
             if (!data) return;
+            if (!transition('wire', 'START')) return;
             document.getElementById('wire-select').style.display = 'none';
             document.getElementById('wire-instructions').style.display = '';
             document.getElementById('wireInstrObj').textContent = `🔌 Level ${data.id}: ${data.name}`;
@@ -3064,6 +3097,7 @@
         });
 
         document.getElementById('wirePlayBtn').addEventListener('click', () => {
+            if (!transition('wire', 'PLAY')) return;
             document.getElementById('wire-instructions').style.display = 'none';
             document.getElementById('wire-game').style.display = '';
             state.wireClueUsed = false;
@@ -3418,8 +3452,10 @@
         }
 
         document.getElementById('wireSubmitBtn').addEventListener('click', () => {
+            if (state.wire.phase !== 'PLAYING') return;
             circuitLightOn = circuitCheckComplete();
             if (circuitLightOn) {
+                if (!transition('wire', 'PASS')) return;
                 const fb = document.getElementById('wireFeedback');
                 fb.textContent = '✅ PERFECT! Circuit is correctly installed!';
                 fb.className = 'wire-feedback success';
@@ -3461,11 +3497,13 @@
         });
 
         document.getElementById('wireFbReplay').addEventListener('click', () => {
+            if (!transition('wire', state.wire.phase === 'GAME_OVER' ? 'RETRY' : 'REPLAY')) return;
             document.getElementById('wireFeedbackOverlay').classList.remove('show');
             startCircuitGame();
         });
 
         document.getElementById('wireFbNext').addEventListener('click', () => {
+            if (!transition('wire', 'NEXT')) return;
             document.getElementById('wireFeedbackOverlay').classList.remove('show');
             if (circuitLevelIndex < WIRE_LEVELS.length - 1) {
                 state.wire.level++;
@@ -3483,12 +3521,25 @@
         // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
         // FAULT FINDER — Shuffled choices & clearer UI
         // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        // Fault Finder inner steps: initial → inspected → repaired
+        const FAULT_FSM = {
+            initial:   { INSPECT: 'inspected', RESET: 'initial' },
+            inspected: { REPAIR: 'repaired', RESET: 'initial' },
+            repaired:  { RESET: 'initial' }
+        };
         let faultState = 'initial';
+        function faultTransition(ev) {
+            const next = FAULT_FSM[faultState]?.[ev];
+            if (!next) return false;
+            faultState = next;
+            return true;
+        }
         let faultLevelData = null;
         let faultSelectedOption = -1;
         let faultChoiceLocked = false;
 
         function initFaultFinder() {
+            state.fault.phase = 'SELECT';
             const status = getUnlockStatus();
             if (!status.fault.unlocked) { showScreen('screen-main'); return; }
             const container = document.getElementById('faultLevelGrid');
@@ -3518,6 +3569,7 @@
             const lv = state.fault.level;
             const data = FAULT_LEVELS[lv];
             if (!data) return;
+            if (!transition('fault', 'START')) return;
             document.getElementById('fault-select').style.display = 'none';
             document.getElementById('fault-instructions').style.display = '';
             const config = FAULT_CONFIGS[lv];
@@ -3527,6 +3579,7 @@
         });
 
         document.getElementById('faultPlayBtn').addEventListener('click', () => {
+            if (!transition('fault', 'PLAY')) return;
             document.getElementById('fault-instructions').style.display = 'none';
             document.getElementById('fault-game').style.display = '';
             startFaultGame();
@@ -3548,7 +3601,7 @@
             }
 
             faultLevelData = config;
-            faultState = 'initial';
+            faultTransition('RESET');
             faultSelectedOption = -1;
             faultChoiceLocked = false;
             document.getElementById('faultFeedback').classList.remove('show');
@@ -3596,7 +3649,7 @@
             const config = faultLevelData;
             if (!config) return;
 
-            faultState = 'inspected';
+            if (!faultTransition('INSPECT')) return;
 
             const problemBox = document.getElementById('faultProblemBox');
             problemBox.textContent = config.inspectMsg;
@@ -3645,6 +3698,7 @@
         });
 
         function handleFaultChoiceSelection(btn, isCorrect) {
+            if (state.fault.phase !== 'PLAYING') return;
             const config = faultLevelData;
             if (!config) return;
             const buttons = document.querySelectorAll('#faultOptionsContainer .choice-btn');
@@ -3683,7 +3737,8 @@
             const config = faultLevelData;
             if (!config) return;
 
-            faultState = 'repaired';
+            if (!faultTransition('REPAIR')) return;
+            if (!transition('fault', 'PASS')) return;
 
             const problemBox = document.getElementById('faultProblemBox');
             problemBox.textContent = config.repairMsg;
@@ -3742,6 +3797,8 @@
         }
 
         document.getElementById('faultFbReplay').addEventListener('click', () => {
+            const isBack = document.getElementById('faultFbReplay').textContent === '↻ BACK';
+            if (!transition('fault', isBack ? 'EXIT' : (state.fault.phase === 'GAME_OVER' ? 'RETRY' : 'REPLAY'))) return;
             document.getElementById('faultFeedback').classList.remove('show');
             if (document.getElementById('faultFbReplay').textContent === '↻ BACK') {
                 document.getElementById('fault-game').style.display = 'none';
@@ -3759,6 +3816,7 @@
         });
 
         document.getElementById('faultFbNext').addEventListener('click', () => {
+            if (!transition('fault', 'NEXT')) return;
             document.getElementById('faultFeedback').classList.remove('show');
             if (state.fault.level < FAULT_LEVELS.length - 1) {
                 state.fault.level++;
@@ -3776,6 +3834,7 @@
         });
 
         document.getElementById('faultResetBtn').addEventListener('click', () => {
+            if (!transition('fault', 'RESTART')) return;
             startFaultGame();
         });
 
@@ -3786,6 +3845,7 @@
         let safetySubmitted = false;
 
         function initSafetyCheck() {
+            state.code.phase = 'SELECT';
             const status = getUnlockStatus();
             if (!status.code.unlocked) { showScreen('screen-main'); return; }
             const container = document.getElementById('codeLevelGrid');
@@ -3800,6 +3860,7 @@
             const lv = state.code.level;
             const data = SAFETY_LEVELS[lv];
             if (!data) return;
+            if (!transition('code', 'START')) return;
             document.getElementById('code-select').style.display = 'none';
             document.getElementById('code-instructions').style.display = '';
             document.getElementById('codeInstrObj').textContent = `🛡️ Level ${data.id}: ${data.name}`;
@@ -3808,6 +3869,7 @@
         });
 
         document.getElementById('codePlayBtn').addEventListener('click', () => {
+            if (!transition('code', 'PLAY')) return;
             document.getElementById('code-instructions').style.display = 'none';
             document.getElementById('code-game').style.display = '';
             startSafetyGame();
@@ -3876,6 +3938,7 @@
         }
 
         document.getElementById('safetySubmitBtn').addEventListener('click', function() {
+            if (state.code.phase !== 'PLAYING') return;
             if (safetySubmitted) return;
 
             const lv = state.code.level;
@@ -3892,6 +3955,7 @@
             const items = document.querySelectorAll('#safetyPPEGrid .ppe-item');
 
             if (allCorrectSelected && !hasIncorrect) {
+                if (!transition('code', 'PASS')) return;
                 safetySubmitted = true;
                 fb.textContent = '✅ Perfect! All required PPE items selected. Level complete!';
                 fb.className = 'safety-feedback-text success';
@@ -3955,6 +4019,8 @@
         }
 
         document.getElementById('codeFbReplay').addEventListener('click', () => {
+            const isBack = document.getElementById('codeFbReplay').textContent === '↻ BACK';
+            if (!transition('code', isBack ? 'EXIT' : (state.code.phase === 'GAME_OVER' ? 'RETRY' : 'REPLAY'))) return;
             document.getElementById('codeFeedback').classList.remove('show');
             if (document.getElementById('codeFbReplay').textContent === '↻ BACK') {
                 document.getElementById('code-game').style.display = 'none';
@@ -3972,6 +4038,7 @@
         });
 
         document.getElementById('codeFbNext').addEventListener('click', () => {
+            if (!transition('code', 'NEXT')) return;
             document.getElementById('codeFeedback').classList.remove('show');
             if (state.code.level < SAFETY_LEVELS.length - 1) {
                 state.code.level++;
