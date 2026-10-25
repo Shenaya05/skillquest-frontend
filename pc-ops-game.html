@@ -1492,6 +1492,24 @@
             seconds: 0,
         };
 
+        // ━━━ FINITE STATE MACHINE (one phase per module) ━━━
+        // SELECT → INSTRUCTIONS → PLAYING → COMPLETE | GAME_OVER
+        // Phase changes ONLY through transition(); illegal events are ignored.
+        const GAME_FSM = {
+            SELECT:       { START: 'INSTRUCTIONS' },
+            INSTRUCTIONS: { PLAY: 'PLAYING', BACK: 'SELECT' },
+            PLAYING:      { PASS: 'COMPLETE', FAIL: 'GAME_OVER', RESTART: 'PLAYING', EXIT: 'SELECT' },
+            COMPLETE:     { REPLAY: 'PLAYING', NEXT: 'SELECT', EXIT: 'SELECT' },
+            GAME_OVER:    { RETRY: 'PLAYING', EXIT: 'SELECT' }
+        };
+        ['ohs', 'os', 'typing', 'spreadsheet', 'maintenance'].forEach(m => { state[m].phase = 'SELECT'; });
+        function transition(game, ev) {
+            const next = GAME_FSM[state[game].phase]?.[ev];
+            if (!next) return false;
+            state[game].phase = next;
+            return true;
+        }
+
         function shuffleArray(arr) {
             for (let i = arr.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
@@ -2107,10 +2125,11 @@
                 const isActive = (idx === current);
                 if (isDone) div.classList.add('completed');
                 if (isActive) div.classList.add('active');
-                if (idx > current + 1) div.classList.add('locked');
+                const unlocked = idx === 0 || completed.has(idx);
+                if (!unlocked) div.classList.add('locked');
                 div.innerHTML =
                     `<div class="num">${idx+1}</div><div class="name">${lv.name}</div><div class="stars">${levelHeartsStr(container.id.replace('LevelGrid', ''), idx + 1, isDone)}</div>`;
-                if (idx <= current + 1 && !isDone) {
+                if (unlocked && !isDone) {
                     div.style.cursor = 'pointer';
                     div.addEventListener('click', () => {
                         const all = container.querySelectorAll('.level-card');
@@ -2232,6 +2251,7 @@
                 if (btn.dataset.back === 'main') {
                     showScreen('screen-main');
                     ['ohs', 'os', 'typing', 'spreadsheet', 'maintenance'].forEach(m => {
+                        state[m].phase = 'SELECT';
                         const sel = document.getElementById(m + '-select');
                         if (sel) sel.style.display = '';
                         const instr = document.getElementById(m + '-instructions');
@@ -2267,6 +2287,7 @@
             if (!levels) return;
             const container = document.getElementById(moduleId + 'LevelGrid');
             if (!container) return;
+            state[moduleId].phase = 'SELECT';
             renderLevelGrid(container, levels, state[moduleId].completed, state[moduleId].level);
             document.getElementById(moduleId + '-select').style.display = '';
             document.getElementById(moduleId + '-instructions').style.display = 'none';
@@ -2283,6 +2304,7 @@
                 const lv = state[moduleId].level;
                 const data = levels[lv];
                 if (!data) return;
+                if (!transition(moduleId, 'START')) return;
                 document.getElementById(moduleId + '-select').style.display = 'none';
                 document.getElementById(moduleId + '-instructions').style.display = '';
                 document.getElementById(moduleId + 'InstrObj').textContent = `🎯 Level ${lv+1}: ${data.name}`;
@@ -2293,6 +2315,7 @@
         document.querySelectorAll('[id$="PlayBtn"]').forEach(btn => {
             btn.addEventListener('click', function() {
                 const moduleId = this.id.replace('PlayBtn', '');
+                if (!transition(moduleId, 'PLAY')) return;
                 document.getElementById(moduleId + '-instructions').style.display = 'none';
                 document.getElementById(moduleId + '-game').style.display = '';
                 startGame(moduleId);
@@ -2801,11 +2824,13 @@
         }
 
         function resetCurrentLevel(moduleId) {
+            if (!transition(moduleId, 'RESTART')) return;
             document.getElementById(moduleId + 'FeedbackOverlay').classList.remove('show');
             startGame(moduleId);
         }
 
         function nextQuestion(moduleId) {
+            if (state[moduleId].phase !== 'PLAYING') return;
             if (currentGame.isComplete) return;
             const idx = currentGame.currentQ;
             const area = currentGame.gameArea;
@@ -2872,6 +2897,7 @@
             const correctCount = currentGame.answers.filter(a => a).length;
             const total = currentGame.answers.length;
             const allCorrect = hearts.cur > 0; // pass = survived with hearts left
+            if (!transition(moduleId, allCorrect ? 'PASS' : 'FAIL')) return;
 
             if (allCorrect) {
                 const lv = state[moduleId].level;
@@ -2911,6 +2937,8 @@
         document.querySelectorAll('[id$="FbReplay"]').forEach(btn => {
             btn.addEventListener('click', function() {
                 const moduleId = this.id.replace('FbReplay', '');
+                const replayEv = this.textContent === '↻ BACK' ? 'EXIT' : (state[moduleId].phase === 'GAME_OVER' ? 'RETRY' : 'REPLAY');
+                if (!transition(moduleId, replayEv)) return;
                 document.getElementById(moduleId + 'FeedbackOverlay').classList.remove('show');
                 if (this.textContent === '↻ BACK') {
                     document.getElementById(moduleId + '-game').style.display = 'none';
@@ -2924,6 +2952,7 @@
         document.querySelectorAll('[id$="FbNext"]').forEach(btn => {
             btn.addEventListener('click', function() {
                 const moduleId = this.id.replace('FbNext', '');
+                if (!transition(moduleId, 'NEXT')) return;
                 document.getElementById(moduleId + 'FeedbackOverlay').classList.remove('show');
                 const levels = MODULE_LEVELS[moduleId];
                 if (state[moduleId].level < levels.length - 1) {
