@@ -1429,6 +1429,35 @@
             color: #fff;
             border-color: var(--accent1);
         }
+
+        /* ══════════════ CERTIFICATE ══════════════ */
+        .cert-banner {
+            background: linear-gradient(135deg, rgba(245, 158, 11, .12), rgba(34, 211, 165, .12));
+            border: 1px solid var(--accent3);
+            border-radius: var(--r);
+            padding: 20px;
+            margin-bottom: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+        .cert-banner.locked {
+            opacity: .55;
+            border-color: var(--border);
+            background: var(--panel);
+        }
+        .cert-banner .btn {
+            flex: 0 0 auto;
+            max-width: 240px;
+        }
+        #cert-canvas {
+            width: 100%;
+            height: auto;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
     </style>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#0b1020">
@@ -1698,6 +1727,19 @@
             <div style="display:flex; gap:12px; justify-content:center;">
                 <button class="btn btn-secondary" style="flex:1; max-width:160px; padding:12px 20px; font-size:16px;" onclick="closeLogoutModal()">No</button>
                 <button class="btn btn-danger" style="flex:1; max-width:160px; padding:12px 20px; font-size:16px;" onclick="doLogout()">Yes, Log Out</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════ CERTIFICATE MODAL ══════ -->
+    <div class="modal-overlay" id="cert-modal">
+        <div class="modal" style="max-width:760px;">
+            <button class="modal-close" onclick="closeModal('cert-modal')">✕</button>
+            <h2>🎓 Certificate of Accomplishment</h2>
+            <canvas id="cert-canvas" width="1600" height="1130"></canvas>
+            <div class="confirm-actions" style="margin-top:16px;">
+                <button class="btn btn-secondary" onclick="closeModal('cert-modal')">Close</button>
+                <button class="btn btn-primary" onclick="downloadCertificate()">⬇ Download PNG</button>
             </div>
         </div>
     </div>
@@ -2331,6 +2373,7 @@
               </div>
             </div>
 
+            ${certBannerHTML()}
             <div class="section-title">NC Readiness Progress</div>
             <div style="background:var(--panel);border:1px solid var(--border);border-radius:var(--r);padding:20px;margin-bottom:28px;">
               ${modules.map(m => {
@@ -2636,6 +2679,86 @@
         }
 
         // ══════════════════════════════════════════
+        // CERTIFICATE
+        // ══════════════════════════════════════════
+        function isTrackComplete() {
+            const mods = COMPETENCY_MODULES[state.track] || [];
+            return mods.length > 0 && mods.every(m => (state.modules[m.id]?.lastPct || 0) >= 70);
+        }
+
+        function certBannerHTML() {
+            const done = isTrackComplete();
+            return `
+            <div class="cert-banner ${done ? '' : 'locked'}">
+              <div>
+                <div style="font-family:'Rajdhani',sans-serif;font-size:20px;font-weight:700;">🎓 Certificate of Accomplishment</div>
+                <div style="font-size:13px;color:var(--muted);">${done
+                    ? 'You completed every module in your track. Claim your certificate!'
+                    : 'Pass all modules in your track (≥70%) to unlock.'}</div>
+              </div>
+              <button class="btn btn-success" ${done ? '' : 'disabled'} onclick="openCertificate()">View Certificate</button>
+            </div>`;
+        }
+
+        function openCertificate() {
+            if (!isTrackComplete()) return showToast('🔒 Finish all modules first');
+            drawCertificate();
+            openModal('cert-modal');
+        }
+
+        function drawCertificate() {
+            const c = document.getElementById('cert-canvas');
+            const g = c.getContext('2d');
+            const W = c.width, H = c.height;
+            const track = TRACKS[state.track];
+            const mods = COMPETENCY_MODULES[state.track];
+            const avg = Math.round(mods.reduce((a, m) => a + (state.modules[m.id]?.lastPct || 0), 0) / mods.length);
+            const date = new Date().toLocaleDateString('en-PH', { year: 'numeric', month: 'long', day: 'numeric' });
+
+            g.fillStyle = '#fffdf6'; g.fillRect(0, 0, W, H);
+            g.strokeStyle = '#1e3a8a'; g.lineWidth = 14; g.strokeRect(40, 40, W - 80, H - 80);
+            g.strokeStyle = '#d4a017'; g.lineWidth = 4; g.strokeRect(65, 65, W - 130, H - 130);
+
+            g.textAlign = 'center';
+            g.fillStyle = '#1e3a8a'; g.font = 'bold 34px Rajdhani, sans-serif';
+            g.fillText('SKILLQUEST · TESDA GAMIFIED ASSESSMENT', W / 2, 160);
+            g.font = 'bold 84px Georgia, serif'; g.fillText('Certificate of Accomplishment', W / 2, 290);
+            g.fillStyle = '#444'; g.font = '30px Georgia, serif';
+            g.fillText('This is proudly presented to', W / 2, 380);
+
+            g.fillStyle = '#b45309'; g.font = 'italic bold 96px Georgia, serif';
+            g.fillText(state.name, W / 2, 510);
+            g.strokeStyle = '#d4a017'; g.lineWidth = 2;
+            g.beginPath(); g.moveTo(W / 2 - 420, 535); g.lineTo(W / 2 + 420, 535); g.stroke();
+
+            g.fillStyle = '#444'; g.font = '30px Georgia, serif';
+            g.fillText('for successfully completing all competency modules of', W / 2, 610);
+            g.fillStyle = '#1e3a8a'; g.font = 'bold 54px Georgia, serif';
+            g.fillText(`${track.full} (${track.label})`, W / 2, 690);
+            g.fillStyle = '#444'; g.font = '28px Georgia, serif';
+            g.fillText(`Overall Score: ${avg}%  ·  Level ${state.level}  ·  ${state.xp} XP  ·  ${state.badges.length} Badges`, W / 2, 770);
+            g.fillText('Rating: COMPETENT', W / 2, 815);
+
+            g.font = '24px Georgia, serif';
+            g.textAlign = 'left'; g.fillText(`Date: ${date}`, 150, 960);
+            g.fillText(`ID: ${state.id}`, 150, 1000);
+            g.textAlign = 'right';
+            g.fillText('City College of Calamba', W - 150, 960);
+            g.fillText('Dept. of Computing and Informatics', W - 150, 1000);
+            g.textAlign = 'center';
+            g.font = 'italic 20px Georgia, serif'; g.fillStyle = '#888';
+            g.fillText('Practice assessment only — not an official TESDA National Certificate.', W / 2, 1060);
+        }
+
+        function downloadCertificate() {
+            drawCertificate();
+            const a = document.createElement('a');
+            a.href = document.getElementById('cert-canvas').toDataURL('image/png');
+            a.download = `SkillQuest_Certificate_${state.name.replace(/\s+/g, '_')}.png`;
+            a.click();
+        }
+
+        // ══════════════════════════════════════════
         // GAME MODULE ENGINE
         // ══════════════════════════════════════════
         let currentGameModule = null;
@@ -2764,6 +2887,7 @@
             updateHUD();
             saveState();
             showMain();
+            if (isTrackComplete()) setTimeout(() => { showToast('🎓 Certificate unlocked!'); openCertificate(); }, 600);
         }
 
         function exitGameModule() {
